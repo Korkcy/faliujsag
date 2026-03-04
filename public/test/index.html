@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="test.css" />
+  <title>Faliújság – TEST</title>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav>
+    <button onclick="showPage('home')">Home</button>
+    <button onclick="showPage('newPost')">New Post</button>
+    <button onclick="showPage('profile')">Profile</button>
+  </nav>
+
+  <!-- PAGES -->
+  <div id="page-container">
+
+    <!-- HOME -->
+    <div id="home" class="page">
+      <h1>Posts (TEST)</h1>
+      <button onclick="loadPosts()">Load posts</button>
+      <div id="posts"></div>
+    </div>
+
+    <!-- NEW POST -->
+    <div id="newPost" class="page" style="display:none;">
+      <h2>New Post (TEST)</h2>
+      <input id="title" placeholder="Title" />
+      <br /><br />
+      <textarea id="description" placeholder="Description"></textarea>
+      <br /><br />
+      <button onclick="createPost()">Create</button>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="profile" class="page" style="display:none;">
+      <h2>Profile</h2>
+      <p>Ide kerül a profil tartalma.</p>
+    </div>
+
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="js/api.js"></script>
+  <script src="js/posts.js"></script>
+  <script src="js/navigation.js"></script>
+
+</body>
+</html>
