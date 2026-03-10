@@ -78,7 +78,7 @@ exports.getAnswer = async (req, res) => {
 
 exports.updateAnswer = async (req, res) => {
   try {
-    const allowedFields = ['text', 'replyTo'];
+    const allowedFields = ['text'];
     const filteredBody = {};
     allowedFields.forEach((field) => {
       if(req.body[field] !== undefined) filteredBody[field] = req.body[field];

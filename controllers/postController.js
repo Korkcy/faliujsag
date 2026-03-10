@@ -2,7 +2,16 @@ const Post = require('../models/postModel');
 
 exports.getAllPosts = async (req, res) => {
     try {
-        const posts = await Post.find()
+        let query = {};
+
+        if (req.query.search){
+            query.$or= [
+                {title: { $regex: req.query.search, $options: 'i'}},
+                {description: { $regex: req.query.serach, $options: 'i'}}
+            ];
+        }
+
+        const posts = await Post.find(query)
         .sort({ createdAt: -1 })
         .populate('author', 'username school profilePicture role');
 

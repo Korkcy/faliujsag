@@ -121,3 +121,22 @@ Megjegyzés: A tényleges regisztrációs és autentikációs logika az authCont
 - Létrehoztam egy compund indexet: {post: 1, createdAt: -1}, amely optimalizálja a poszthoz tartozó válaszok lekérését, a legújabb előre sorolásával.
 - Az isEdited állapotot nem tárolom az adatbázisban, hanem egy virtual mezőként számolom: createdAt és updatedAt összehasonlításával.
 - A schema toJSON/toObject beállításával elértem, hogy a virtual mező (isEdited) megjelenjen a válasz JSON kimenetében is.
+
+## 2026-03-04 Answer CRUD és GitHub repository
+
+- Megírtam az answerControllert, ami felelős a válaszok CRUD-jának megvalósításáért. 
+- A controller 4 használatba kerülő api endpointot tartalmaz, egy poszthoz tartozó válaszok lekérésére, válasz létrehozására, frissítésére és törlésére.
+- Választ csak bejelentkezve lehet létrehozni és csak az author vagy az admin törölhet egy választ.
+- Az updateAnswer metóduson belül whitelist-eltem, hogy a felhasználó mit módosíthat egy válaszban, ez csak a szöveg tartalma. 
+- A válaszok számának automatikus frissítését is implementáltam, így amikor egy posztra érkezik egy válasz, a válaszok száma nő, ha egy választ törölnek, akkor pedig csökken
+- Emellett létrehoztam a projekt központi GitHub repository-ját és a bakcend teljes jelenlegi állapotát elmentettem.
+- A repository tartalmazza a backend mappastruktúrját.
+- Egy .gitignore fájlban meghatároztam, hogy a node modulok, a config.env és a log fájlok ne kerüljene mentésre, biztonsági és tárhely megtakarítási szempontból.
+
+## 2026-03-10 Keresőfunkció implementálása
+
+- A postController getAllPosts metódusát kibővítettem kulcsszó alapú kereséssel.
+- A keresés query paraméter segítségével történik: /api/v1/posts?search=ELTE.
+- A kereső jelenleg a posztok címében és leírásában keres.
+- A megvalósítás MongoDB regex alapú szűréssel készült.
+- A keresés kis- és nagybetű független.
