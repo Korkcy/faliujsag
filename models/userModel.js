@@ -52,13 +52,11 @@ const userSchema = new mongoose.Schema({
 }
 );
 
-userSchema.pre('save', async function (next){
-    if (!this.isModified('password')) return next(); //Ha már hashelve van tovább
+userSchema.pre('save', async function (){
+    if (!this.isModified('password')) return; //Ha már hashelve van tovább
 
     this.password = await bcrypt.hash(this.password, 12); //12 salt rounds (biztonság/sebesség egyensúly)
     this.passwordConfirm = undefined; //csak validálásohoz kellett
-
-    next();
 });
 
 //Login controllerbe ellenőrző metódus:

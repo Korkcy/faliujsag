@@ -9,11 +9,39 @@ exports.getAnswersByPost = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate("author", "username school profilePicture");
 
+    const answersArray = answers.map(answer =>{
+      const obj = answer.toObject();
+      obj.replies = [];
+      return obj;
+    });
+
+    const answersMap = {};
+
+    answersArray.forEach(answer => {
+      answersMap[answer._id.toString()] = answer;
+    });
+
+    const rootAnswers = [];
+
+    answersArray.forEach(answer => {
+      if (answer.replyTo) {
+        const parent = answersMap[answer.replyTo.toString()];
+
+        if(parent){
+          parent.replies.push(answer);
+        } else {
+          rootAnswers.push(answer);
+        }
+      } else {
+        rootAnswers.push(answer)
+      }
+    })
+    
     res.status(200).json({
       status: "success",
-      results: answers.length,
+      results: rootAnswers.length,
       data: {
-        answers,
+        answers: rootAnswers
       },
     });
   } catch (err) {
@@ -27,11 +55,39 @@ exports.getAnswersByPost = async (req, res) => {
 exports.createAnswer = async (req, res) => {
   try {
     const { postId } = req.params;
+    const {text, replyTo} = req.body;
+
+    const post = await Post.findById(postId);
+    if (!post){
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Nincs ilyen poszt'
+      });
+    }
+
+    if (replyTo){
+      const parentAnswer = await Answer.findById(replyTo);
+
+      if (!parentAnswer){
+        return res.status(404).json({
+          status: 'fail',
+          message: 'A replyTo válasz nem létezik'
+        });
+      }
+
+      if (parentAnswer.post.toString() !== postId){
+        return res.status(400).json({
+          status: 'fail',
+          message: 'Csak ugyanahhoz a poszthoz tartozó válaszra lehet válaszolni'
+        });
+      }
+    }
 
     const answer = await Answer.create({
-      text: req.body.text,
+      text,
       post: postId,
       author: req.user._id,
+      replyTo: replyTo || null
     });
 
     await Post.findByIdAndUpdate(postId, {$inc: {answersCount: 1} });
