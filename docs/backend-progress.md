@@ -140,3 +140,17 @@ Megjegyzés: A tényleges regisztrációs és autentikációs logika az authCont
 - A kereső jelenleg a posztok címében és leírásában keres.
 - A megvalósítás MongoDB regex alapú szűréssel készült.
 - A keresés kis- és nagybetű független.
+
+## 2026-03-16 Reply thread implementálása az answers rendszerhez
+
+- Az Answer modell meglévő replyTo mezőjét felhasználva implementáltam a válaszokra érkező válaszok (reply thread) logikáját.
+- A createAnswer metódus kibővítésre került:
+  - ha a kérés body-ja tartalmaz replyTo mezőt, akkor a létrehozott answer egy másik válaszra válaszol
+  - ellenőrzésre kerül, hogy a replyTo-ban megadott Answer létezik-e
+  - ellenőrzésre kerül, hogy a parent Answer ugyanahhoz a poszthoz tartozik-e
+- A getAnswersByPost metódus módosításra került:
+  - az Answer dokumentumokat a backend threadelt fa struktúrába rendezi
+  - a root válaszok külön tömbbe kerülnek
+  - a child válaszok a parent replies mezőjébe kerülnek
+- A threadelt válaszstruktúra lehetővé teszi, hogy a frontend később egyszerűbben jelenítse meg a nested beszélgetéseket.
+- A működést Postman segítségével teszteltem.
