@@ -1,8 +1,9 @@
 const User = require('../models/userModel');
 const bcrypt = require('bcrypt');
 const {signToken} = require('../utils/jwt');
+const AppError = require('../utils/appError');
 
-exports.signup = async (req, res) => {
+exports.signup = async (req, res, next) => {
     try {
         const {email, username, password, passwordConfirm, school} = req.body;
 
@@ -29,31 +30,22 @@ exports.signup = async (req, res) => {
             }
         });
     } catch (err) {
-        res.status(400).json({
-            status: 'fail',
-            message: err.message
-        });
+        next(err);
     }
 };
 
-exports.login = async (req,res)=>{
+exports.login = async (req,res,next)=>{
     try {
         const {email, password} = req.body;
 
         if (!email || !password) {
-            return res.status(400).json({
-                status: 'fail',
-                message: 'Email és jelszó megadása kötelező'
-            });
+            return next(new AppError('Email és jelszó megadása kötelező', 400));
         }
 
         const user = await User.findOne({email}).select('+password');
 
         if(!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(401).json({
-                status: 'fail',
-                message: 'Hibás email vagy jelszó'
-            });
+            return next(new AppError('Hibás email vagy jelszó', 401));
         }
 
         const token = signToken(user._id);
@@ -71,9 +63,6 @@ exports.login = async (req,res)=>{
             }
         });
     } catch (err) {
-        res.status(500).json({
-            status: 'error',
-            message: err.message
-        });
+        next(err);
     }
 };

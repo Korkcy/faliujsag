@@ -1,7 +1,8 @@
 const Answer = require("../models/answerModel");
 const Post = require("../models/postModel");
+const AppError = require("../utils/appError");
 
-exports.getAnswersByPost = async (req, res) => {
+exports.getAnswersByPost = async (req, res, next) => {
   try {
     const { postId } = req.params;
 
@@ -45,41 +46,29 @@ exports.getAnswersByPost = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({
-      status: "error",
-      message: err.message,
-    });
+    next(err);
   }
 };
 
-exports.createAnswer = async (req, res) => {
+exports.createAnswer = async (req, res, next) => {
   try {
     const { postId } = req.params;
     const {text, replyTo} = req.body;
 
     const post = await Post.findById(postId);
     if (!post){
-      return res.status(404).json({
-        status: 'fail',
-        message: 'Nincs ilyen poszt'
-      });
+      return next(new AppError('Nincs ilyen poszt', 404));
     }
 
     if (replyTo){
       const parentAnswer = await Answer.findById(replyTo);
 
       if (!parentAnswer){
-        return res.status(404).json({
-          status: 'fail',
-          message: 'A replyTo válasz nem létezik'
-        });
+        return next(new AppError('A replyTo válasz nem létezik', 404));
       }
 
       if (parentAnswer.post.toString() !== postId){
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Csak ugyanahhoz a poszthoz tartozó válaszra lehet válaszolni'
-        });
+        return next(new AppError('Csak ugyanahhoz a poszthoz tartozó válaszra lehet válaszolni', 400));
       }
     }
 
@@ -99,14 +88,11 @@ exports.createAnswer = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(400).json({
-      status: "fail",
-      message: err.message,
-    });
+    next(err);
   }
 };
 
-exports.getAnswer = async (req, res) => {
+exports.getAnswer = async (req, res, next) => {
   try {
     const answer = await Answer.findById(req.params.id).populate(
       "author",
@@ -114,10 +100,7 @@ exports.getAnswer = async (req, res) => {
     );
 
     if (!answer) {
-      return res.status(404).json({
-        status: "fail",
-        message: "Nincs ilyen válasz",
-      });
+      return next(new AppError('Nincs ilyen válasz', 404));
     }
 
     res.status(200).json({
@@ -125,14 +108,11 @@ exports.getAnswer = async (req, res) => {
       data: { answer },
     });
   } catch (err) {
-    res.status(500).json({
-      status: "error",
-      message: err.message,
-    });
+    next(err);
   }
 };
 
-exports.updateAnswer = async (req, res) => {
+exports.updateAnswer = async (req, res, next) => {
   try {
     const allowedFields = ['text'];
     const filteredBody = {};
@@ -146,10 +126,7 @@ exports.updateAnswer = async (req, res) => {
     });
 
     if (!answer) {
-      return res.status(404).json({
-        status: "fail",
-        message: "Nincs ilyen válasz",
-      });
+      return next(new AppError('Nincs ilyen válasz', 404));
     }
 
     res.status(200).json({
@@ -157,22 +134,16 @@ exports.updateAnswer = async (req, res) => {
       data: { answer },
     });
   } catch (err) {
-    res.status(400).json({
-      status: "fail",
-      message: err.message,
-    });
+    next(err);
   }
 };
 
-exports.deleteAnswer = async (req, res) => {
+exports.deleteAnswer = async (req, res, next) => {
   try {
     const answer = await Answer.findByIdAndDelete(req.params.id);
 
     if (!answer) {
-      return res.status(404).json({
-        status: "fail",
-        message: "Nincs ilyen válasz",
-      });
+      return next(new AppError('Nincs ilyen válasz', 404));
     };
 
     await Post.findByIdAndUpdate(answer.post, {$inc: {answersCount: -1} })
@@ -182,9 +153,6 @@ exports.deleteAnswer = async (req, res) => {
       data: null,
     });
   } catch (err) {
-    res.status(400).json({
-      status: "fail",
-      message: err.message,
-    });
+    next(err);
   }
 };

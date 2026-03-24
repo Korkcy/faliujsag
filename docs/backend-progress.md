@@ -154,3 +154,11 @@ Megjegyzés: A tényleges regisztrációs és autentikációs logika az authCont
   - a child válaszok a parent replies mezőjébe kerülnek
 - A threadelt válaszstruktúra lehetővé teszi, hogy a frontend később egyszerűbben jelenítse meg a nested beszélgetéseket.
 - A működést Postman segítségével teszteltem.
+
+## 2026-03-23 Global Error Handler implementálása
+
+- Létrehoztam egy központi hibakezelő middleware-t (errorMiddleware.js).
+- A middleware egységes formátumban kezeli a hibákat (status, message).
+- Az app.js-ben a route-ok után bekötésre került.
+- A controllerekben, az eddigi hibákat átalakítottam, hogy a központi hibakezelőt használják (next(err)).
+- Létrehoztam az AppError osztályt, egyedi hibák kezelésére.
