@@ -1,52 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="test.css" />
-  <title>Faliújság – TEST</title>
+  <title>Faliújság</title>
+  <script>
+    if (localStorage.getItem("theme") === "dark") {
+      document.documentElement.classList.add("dark");
+    }
+  </script>
+  <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
   <!-- NAVBAR -->
-  <nav>
-    <button onclick="showPage('home')">Home</button>
-    <button onclick="showPage('newPost')">New Post</button>
-    <button onclick="showPage('profile')">Profile</button>
+  <nav class="navbar">
+    <div class="nav-center">
+      <button onclick="setFeed('home')"><a href="index.html">Home</a></button>
+      <button onclick="setFeed('following')">Following</button>
+    </div>
+
+    <div class="nav-right">
+      <button class="notif-btn">🔔</button>
+
+      <div class="profile">
+        <img src="https://i.pravatar.cc/40" onclick="toggleDropdown()" />
+        <div class="dropdown" id="dropdown">
+          <div><a href="profile.html" id="profil">Profile</a></div>
+          <div>Settings</div>
+
+          <div class="dark-toggle">
+            Dark mode
+            <label class="switch">
+              <input type="checkbox" id="darkToggle">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+            <hr>
+            <div class="logout" onclick="logout()">Logout</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </nav>
 
-  <!-- PAGES -->
-  <div id="page-container">
+  <!-- SEARCH + FILTER -->
+<div class="top-bar">
+  <input type="text" placeholder="Search..." class="search-input" />
 
-    <!-- HOME -->
-    <div id="home" class="page">
-      <h1>Posts (TEST)</h1>
-      <button onclick="loadPosts()">Load posts</button>
-      <div id="posts"></div>
-    </div>
-
-    <!-- NEW POST -->
-    <div id="newPost" class="page" style="display:none;">
-      <h2>New Post (TEST)</h2>
-      <input id="title" placeholder="Title" />
-      <br /><br />
-      <textarea id="description" placeholder="Description"></textarea>
-      <br /><br />
-      <button onclick="createPost()">Create</button>
-    </div>
-
-    <!-- PROFILE -->
-    <div id="profile" class="page" style="display:none;">
-      <h2>Profile</h2>
-      <p>Ide kerül a profil tartalma.</p>
-    </div>
-
+  <div class="filters">
+    <button>Newest</button>
+    <button>Most answers</button>
+    <button>Top rated</button>
+  </div>
+</div>
+  <!-- POSTS -->
+  <div class="container">
+    <div id="posts"></div>
   </div>
 
-  <!-- SCRIPTS -->
-  <script src="js/api.js"></script>
-  <script src="js/posts.js"></script>
-  <script src="js/navigation.js"></script>
+  <!-- FLOATING BUTTON -->
+<button class="fab" onclick="openCreateModal()">+</button>
 
+<!-- CREATE POST MODAL (új rész) -->
+<div class="modal" id="createModal" onclick="closeCreateModal(event)">
+  <div class="modal-content create-modal">
+    <h2>New Question</h2>
+    
+    <input type="text" id="postTitle" placeholder="Title" />
+    <textarea id="postDescription" placeholder="Description"></textarea>
+    
+    <div class="form-actions">
+      <button onclick="closeCreateModal()">Back</button>
+      <button onclick="createPost()">Create</button>
+    </div>
+    
+    <p class="error" id="createError"></p>
+  </div>
+</div>
+
+  <!-- MODAL -->
+  <div class="modal" id="modal" onclick="closeModal(event)">
+    <div class="modal-content">
+      <h2 id="modal-title"></h2>
+      <p id="modal-author"></p>
+      <p id="modal-desc"></p>
+      <hr>
+      <div id="modal-comments"></div>
+    </div>
+  </div>
+
+  <script src="./js/index.js"></script>
+  <script src="app.js"></script>
 </body>
+
 </html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <title>Profil</title>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="nav-center">
+            <button onclick="setFeed('home')"><a href="index.html">Home</a></button>
+            <button onclick="setFeed('following')">Following</button>
+        </div>
+
+        <div class="nav-right">
+            <button class="notif-btn">🔔</button>
+
+            <div class="profile">
+                <img src="https://i.pravatar.cc/40" onclick="toggleDropdown()" />
+                <div class="dropdown" id="dropdown">
+                    <div><a href="profile.html" id="profil">Profile</a></div>
+                    <div>Settings</div>
+
+                    <div class="dark-toggle">
+                        Dark mode
+                        <label class="switch">
+                            <input type="checkbox" id="darkToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+    <script src="./js/profil.js"></script>
+</body>
+
+</html>
