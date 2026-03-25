@@ -162,3 +162,13 @@ Megjegyzés: A tényleges regisztrációs és autentikációs logika az authCont
 - Az app.js-ben a route-ok után bekötésre került.
 - A controllerekben, az eddigi hibákat átalakítottam, hogy a központi hibakezelőt használják (next(err)).
 - Létrehoztam az AppError osztályt, egyedi hibák kezelésére.
+
+## 2026-03-25 Frontend első verzió, posztok megjelenítése az adatbázisból
+
+- Létrehoztuk a főoldalt, index.html-t és a hozzá tartozó, index.js-t
+- A főoldalon, megjelennek a posztok az adatbázisból
+- A posztokat meg lehet nyitni és megjelennek a poszthoz tartozó adatok, mint az author, létrehozás dátuma, válaszok száma és a válaszok tartalma
+- Dark mód implementálva, lokálisan elmenti a keresőben hogy éppen be van-e kapcsolva
+- Search bar is lett létrehozva, de még nem funkcionális
+- A posztok létrehozására, van egy gomb, ez sem működik, még
+- A posztok szűrésére is vannak gombok, lehet majd a sorrendet állítani, válaszok száma alapján, értékelések alapján

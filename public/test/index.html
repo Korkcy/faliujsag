@@ -18,8 +18,8 @@
   <!-- NAVBAR -->
   <nav class="navbar">
     <div class="nav-center">
-      <button onclick="setFeed('home')"><a href="index.html">Home</a></button>
-      <button onclick="setFeed('following')">Following</button>
+      <button type="button"><a href="index.html">Home</a></button>
+  <button type="button">Following</button>
     </div>
 
     <div class="nav-right">
@@ -49,12 +49,17 @@
 
   <!-- SEARCH + FILTER -->
 <div class="top-bar">
-  <input type="text" placeholder="Search..." class="search-input" />
+  <input
+    type="text"
+    placeholder="Search..."
+    class="search-input"
+    id="searchInput"
+  />
 
   <div class="filters">
-    <button>Newest</button>
-    <button>Most answers</button>
-    <button>Top rated</button>
+    <button type="button" onclick="setSort('newest')">Newest</button>
+    <button type="button" onclick="setSort('answers')">Most answers</button>
+    <button type="button" onclick="setSort('rated')">Top rated</button>
   </div>
 </div>
   <!-- POSTS -->
@@ -94,7 +99,6 @@
   </div>
 
   <script src="./js/index.js"></script>
-  <script src="app.js"></script>
 </body>
 
 </html>

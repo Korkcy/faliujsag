@@ -1,138 +1,258 @@
-const posts = [
-    {
-        title: "First post",
-        author: "User1",
-        desc: "Ez egy teszt poszt",
-        comments: ["Nice!", "Cool"]
-    },
-    {
-        title: "Second post",
-        author: "User2",
-        desc: "Another post",
-        comments: ["Wow", "Amazing"]
-    }
-];
+//API request
 
-function loadPosts() {
-    const container = document.getElementById("posts");
-    container.innerHTML = "";
+const API_BASE = "/api/v1";
 
-    posts.forEach((p, i) => {
-        const div = document.createElement("div");
-        div.className = "post";
-        div.innerHTML = `
-  <h3>${p.title}</h3>
-  <p>${p.desc}</p>
-  <div class="post-meta">
-    <span>👤 ${p.author}</span>
-    <span>📅 2026</span>
-    <span>💬 ${p.comments.length} replies</span>
-  </div>
-`;
-        div.onclick = () => openModal(i);
-        container.appendChild(div);
-    });
+async function apiRequest(endpoint, method = "GET", data = null) {
+  const token = localStorage.getItem("token");
+
+  const options = {
+    method,
+    headers: {}
+  };
+
+  if (data) {
+    options.headers["Content-Type"] = "application/json";
+    options.body = JSON.stringify(data);
+  }
+
+  if (token) {
+    options.headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE}${endpoint}`, options);
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Hiba történt.");
+  }
+
+  return result;
 }
 
-function openModal(i) {
-    const p = posts[i];
+let posts = [];
+let currentSort = "newest";
 
-    document.getElementById("modal-title").innerText = p.title;
-    document.getElementById("modal-author").innerText = "by " + p.author;
-    document.getElementById("modal-desc").innerText = p.desc;
+function formatDate(dateString) {
+  if (!dateString) return "Ismeretlen dátum";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("hu-HU");
+}
 
-    const comments = document.getElementById("modal-comments");
-    comments.innerHTML = "<h4>Comments:</h4>";
-    p.comments.forEach(c => {
-        comments.innerHTML += `<p>- ${c}</p>`;
+function getAuthorName(post) {
+  if (post.author && typeof post.author === "object") {
+    return post.author.username || "Ismeretlen felhasználó";
+  }
+  return "Ismeretlen felhasználó";
+}
+
+function sortPosts(list) {
+  const sorted = [...list];
+
+  if (currentSort === "newest") {
+    sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+
+  if (currentSort === "answers") {
+    sorted.sort((a, b) => (b.answersCount || 0) - (a.answersCount || 0));
+  }
+
+  if (currentSort === "rated") {
+    sorted.sort((a, b) => (b.ratingsAverage || 0) - (a.ratingsAverage || 0));
+  }
+
+  return sorted;
+}
+
+async function loadPosts(searchTerm = "") {
+  const container = document.getElementById("posts");
+  container.innerHTML = "<p>Betöltés...</p>";
+
+  try {
+    let endpoint = "/posts";
+
+    if (searchTerm.trim()) {
+      endpoint += `?search=${encodeURIComponent(searchTerm.trim())}`;
+    }
+
+    const response = await apiRequest(endpoint, "GET");
+    posts = response.data.posts || [];
+
+    const sortedPosts = sortPosts(posts);
+
+    container.innerHTML = "";
+
+    if (sortedPosts.length === 0) {
+      container.innerHTML = "<p>Nincsenek még posztok.</p>";
+      return;
+    }
+
+    sortedPosts.forEach((post) => {
+      const div = document.createElement("div");
+      div.className = "post";
+
+      div.innerHTML = `
+        <h3>${post.title}</h3>
+        <p>${post.description}</p>
+        <div class="post-meta">
+          <span>👤 ${getAuthorName(post)}</span>
+          <span>📅 ${formatDate(post.createdAt)}</span>
+          <span>💬 ${post.answersCount || 0} replies</span>
+        </div>
+      `;
+
+      div.onclick = () => openModal(post);
+      container.appendChild(div);
     });
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = `<p>Hiba történt a posztok betöltésekor: ${err.message}</p>`;
+  }
+}
 
-    document.getElementById("modal").style.display = "flex";
+async function openModal(post) {
+  document.getElementById("modal-title").innerText = post.title;
+  document.getElementById("modal-author").innerText = `by ${getAuthorName(post)}`;
+  document.getElementById("modal-desc").innerText = post.description;
+
+  const comments = document.getElementById("modal-comments");
+  comments.innerHTML = "<h4>Comments:</h4><p>Betöltés...</p>";
+
+  try {
+    const response = await apiRequest(`/posts/${post._id}/answers`, "GET");
+    const answers = response.data.answers || [];
+
+    comments.innerHTML = "<h4>Comments:</h4>";
+
+    if (answers.length === 0) {
+      comments.innerHTML += "<p>Még nincsenek válaszok ehhez a poszthoz.</p>";
+    } else {
+      renderAnswers(comments, answers, 0);
+    }
+  } catch (err) {
+    console.error(err);
+    comments.innerHTML = `<p>Hiba történt a válaszok betöltésekor: ${err.message}</p>`;
+  }
+
+  document.getElementById("modal").style.display = "flex";
+}
+
+function renderAnswers(container, answers, level = 0) {
+  answers.forEach((answer) => {
+    const authorName =
+      answer.author && typeof answer.author === "object"
+        ? answer.author.username
+        : "Ismeretlen felhasználó";
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "answer-item";
+    wrapper.style.marginLeft = `${level * 20}px`;
+    wrapper.style.marginTop = "12px";
+
+    wrapper.innerHTML = `
+      <p><strong>${authorName}</strong> • ${formatDate(answer.createdAt)}</p>
+      <p>${answer.text}</p>
+    `;
+
+    container.appendChild(wrapper);
+
+    if (answer.replies && answer.replies.length > 0) {
+      renderAnswers(container, answer.replies, level + 1);
+    }
+  });
 }
 
 function closeModal(e) {
-    if (e.target.id === "modal") {
-        document.getElementById("modal").style.display = "none";
-    }
+  if (!e || e.target.id === "modal") {
+    document.getElementById("modal").style.display = "none";
+  }
 }
 
 /* DROPDOWN */
 function toggleDropdown() {
-    const d = document.getElementById("dropdown");
-    d.style.display = d.style.display === "block" ? "none" : "block";
+  const d = document.getElementById("dropdown");
+  d.style.display = d.style.display === "block" ? "none" : "block";
 }
 
 /* DARK MODE */
-document.getElementById("darkToggle").addEventListener("change", () => {
-    document.body.classList.toggle("dark");
-});
-
 const toggle = document.getElementById("darkToggle");
 
 toggle.addEventListener("change", () => {
-    if (toggle.checked) {
-        document.body.classList.add("dark");
-        localStorage.setItem("theme", "dark"); // mentés
-    } else {
-        document.body.classList.remove("dark");
-        localStorage.setItem("theme", "light"); // mentés
-    }
+  if (toggle.checked) {
+    document.body.classList.add("dark");
+    localStorage.setItem("theme", "dark");
+  } else {
+    document.body.classList.remove("dark");
+    localStorage.setItem("theme", "light");
+  }
 });
 
 window.addEventListener("DOMContentLoaded", () => {
-    const savedTheme = localStorage.getItem("theme");
+  const savedTheme = localStorage.getItem("theme");
 
-    if (savedTheme === "dark") {
-        document.body.classList.add("dark");
-        document.getElementById("darkToggle").checked = true;
-    }
+  if (savedTheme === "dark") {
+    document.body.classList.add("dark");
+    document.getElementById("darkToggle").checked = true;
+  }
+
+  const searchInput = document.getElementById("searchInput");
+
+  if (searchInput) {
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        loadPosts(searchInput.value);
+      }
+    });
+  }
+
+  loadPosts();
 });
 
-if (localStorage.getItem("theme") === "dark") {
-    document.documentElement.classList.add("dark");
-}
-
-//modal
-
-// Create Modal megnyitása
+/* CREATE MODAL */
 function openCreateModal() {
-    document.getElementById('createModal').style.display = 'flex';
-    document.getElementById('postTitle').focus();
+  document.getElementById("createModal").style.display = "flex";
+  document.getElementById("postTitle").focus();
 }
 
-// Create Modal bezárása
 function closeCreateModal(event) {
-    const modal = document.getElementById('createModal');
-    
-    // Ha a háttérre kattintottunk vagy a Back gombra
-    if (!event || event.target === modal) {
-        modal.style.display = 'none';
-        
-        // űrlap törlése
-        document.getElementById('postTitle').value = '';
-        document.getElementById('postDescription').value = '';
-        document.getElementById('createError').textContent = '';
-    }
+  const modal = document.getElementById("createModal");
+
+  if (!event || event.target === modal) {
+    modal.style.display = "none";
+    document.getElementById("postTitle").value = "";
+    document.getElementById("postDescription").value = "";
+    document.getElementById("createError").textContent = "";
+  }
 }
 
-// Új poszt létrehozása (itt majd a saját logikádat írd bele)
-function createPost() {
-    const title = document.getElementById('postTitle').value.trim();
-    const desc = document.getElementById('postDescription').value.trim();
-    const errorEl = document.getElementById('createError');
+async function createPost() {
+  const title = document.getElementById("postTitle").value.trim();
+  const description = document.getElementById("postDescription").value.trim();
+  const errorEl = document.getElementById("createError");
 
-    if (!title) {
-        errorEl.textContent = "A cím megadása kötelező!";
-        return;
-    }
+  if (!title) {
+    errorEl.textContent = "A cím megadása kötelező!";
+    return;
+  }
 
-    // Itt később majd elküldöd a szervernek...
-    console.log("Új kérdés:", { title, desc });
+  try {
+    await apiRequest("/posts", "POST", { title, description });
 
-    alert("Kérdés sikeresen létrehozva! (később szerveres rész jön)");
-    
     closeCreateModal();
+    await loadPosts(document.getElementById("searchInput").value);
+  } catch (err) {
+    console.error(err);
+    errorEl.textContent = err.message;
+  }
 }
 
-loadPosts();
+function setSort(type) {
+  currentSort = type;
+  loadPosts(document.getElementById("searchInput").value);
+}
 
+function logout() {
+  localStorage.removeItem("token");
+  alert("Sikeres kijelentkezés.");
+  location.reload();
+}
