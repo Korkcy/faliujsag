@@ -256,6 +256,7 @@ body.dark .divider {
   padding: 8px 12px;
   border-radius: 10px;
   cursor: pointer;
+  color: inherit;
 }
 
 .filters button:hover {
