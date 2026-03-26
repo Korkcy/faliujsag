@@ -172,3 +172,11 @@ Megjegyzés: A tényleges regisztrációs és autentikációs logika az authCont
 - Search bar is lett létrehozva, de még nem funkcionális
 - A posztok létrehozására, van egy gomb, ez sem működik, még
 - A posztok szűrésére is vannak gombok, lehet majd a sorrendet állítani, válaszok száma alapján, értékelések alapján
+
+## 2026-03-26 Bejelentkezés, regisztráció, profil oldal, design, pagination, sorting
+
+- A postController getAllPosts metódusát kibővítettem pagination és sorting támogatással.
+- A query paraméterek: page, limit, sort, search
+- A támogatott rendezési módok: newest, answers, rated
+- A keresés továbbra is a címben és leírásban történik.
+- A válaszban visszaadásra kerül: aktuális oldal, összes találat, összes oldal száma

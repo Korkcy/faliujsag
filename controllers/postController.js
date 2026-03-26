@@ -20,15 +20,54 @@ exports.getAllPosts = async (req, res, next) => {
       ];
     }
 
+    let sortOption = { createdAt: -1 };
+
+    if (req.query.sort) {
+      const sortValue = Array.isArray(req.query.sort)
+        ? req.query.sort[0]
+        : req.query.sort;
+      
+      if (sortValue === "newest") {
+        sortOption = { createdAt: -1};
+      } else if (sortValue === "answers") {
+        sortOption = { answersCount: -1};
+      } else if (sortValue === "rated") {
+        sortOption = { ratingsAverage: -1};
+      } else {
+        return next(
+          new AppError(
+            "Érvénytelen rendezési mód. Használható: newest, answers, rated",
+            400
+          )
+        );
+      }
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+
+    if (page < 1 || limit < 1) {
+      return next(new AppError("A page és a limit csak pozitív szám lehet", 400));
+    }
+
+    const skip = (page - 1) * limit;
+
+    const totalPosts = await Post.countDocuments(query);
+
     const posts = await Post.find(query)
-      .sort({ createdAt: -1 })
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit)
       .populate("author", "username school profilePicture role");
 
     res.status(200).json({
       status: "success",
       results: posts.length,
+      totalResults: totalPosts,
+      currentPage: page,
+      totalPages: Math.ceil(totalPosts/limit),
       data: {
-        posts,
+        posts
       },
     });
   } catch (err) {
