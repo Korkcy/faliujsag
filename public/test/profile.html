@@ -43,6 +43,66 @@
     </nav>
 
 
+
+    <div class="container">
+    <div class="profile-page">
+
+        <!-- PROFILE CARD -->
+        <div class="profile-card">
+
+            <div class="profile-header">
+                <img id="profileImage" src="https://i.pravatar.cc/120">
+                <input type="file" id="imageUpload" accept="image/*" hidden>
+
+                <button onclick="document.getElementById('imageUpload').click()">
+                    Change photo
+                </button>
+            </div>
+
+            <div class="profile-info">
+
+                <div class="profile-row">
+                    <label>Email</label>
+                    <input type="email" id="email">
+                </div>
+
+                <div class="profile-row">
+                    <label>Username</label>
+                    <input type="text" id="username">
+                </div>
+
+                <div class="profile-row">
+                    <label>Password</label>
+                    <div class="password-box">
+                        <input type="password" id="password">
+                        <button onclick="togglePassword()">Show</button>
+                    </div>
+                </div>
+
+                <div class="profile-row">
+                    <label>School</label>
+                    <input type="text" id="school">
+                </div>
+
+                <button class="save-profile" onclick="saveProfile()">
+                    Save changes
+                </button>
+
+            </div>
+        </div>
+
+
+        <!-- USER POSTS -->
+        <div class="profile-posts">
+            <h2>Your posts</h2>
+            <div id="userPosts"></div>
+        </div>
+
+    </div>
+</div>
+
+
+
     <script src="./js/profil.js"></script>
 </body>
 
