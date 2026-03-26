@@ -1,5 +1,3 @@
-//API request
-
 const API_BASE = "/api/v1";
 
 async function apiRequest(endpoint, method = "GET", data = null) {
@@ -20,7 +18,6 @@ async function apiRequest(endpoint, method = "GET", data = null) {
   }
 
   const response = await fetch(`${API_BASE}${endpoint}`, options);
-
   const result = await response.json();
 
   if (!response.ok) {
@@ -46,48 +43,39 @@ function getAuthorName(post) {
   return "Ismeretlen felhasználó";
 }
 
-function sortPosts(list) {
-  const sorted = [...list];
-
-  if (currentSort === "newest") {
-    sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  }
-
-  if (currentSort === "answers") {
-    sorted.sort((a, b) => (b.answersCount || 0) - (a.answersCount || 0));
-  }
-
-  if (currentSort === "rated") {
-    sorted.sort((a, b) => (b.ratingsAverage || 0) - (a.ratingsAverage || 0));
-  }
-
-  return sorted;
-}
-
 async function loadPosts(searchTerm = "") {
   const container = document.getElementById("posts");
   container.innerHTML = "<p>Betöltés...</p>";
 
   try {
-    let endpoint = "/posts";
+    const params = new URLSearchParams();
 
     if (searchTerm.trim()) {
-      endpoint += `?search=${encodeURIComponent(searchTerm.trim())}`;
+      params.append("search", searchTerm.trim());
     }
+
+    if (currentSort) {
+      params.append("sort", currentSort);
+    }
+
+    // később paginationhez jól fog jönni
+    params.append("page", "1");
+    params.append("limit", "10");
+
+    const endpoint = `/posts?${params.toString()}`;
+    console.log("Lekért endpoint:", endpoint);
 
     const response = await apiRequest(endpoint, "GET");
     posts = response.data.posts || [];
 
-    const sortedPosts = sortPosts(posts);
-
     container.innerHTML = "";
 
-    if (sortedPosts.length === 0) {
+    if (posts.length === 0) {
       container.innerHTML = "<p>Nincsenek még posztok.</p>";
       return;
     }
 
-    sortedPosts.forEach((post) => {
+    posts.forEach((post) => {
       const div = document.createElement("div");
       div.className = "post";
 
@@ -177,22 +165,29 @@ function toggleDropdown() {
 /* DARK MODE */
 const toggle = document.getElementById("darkToggle");
 
-toggle.addEventListener("change", () => {
-  if (toggle.checked) {
-    document.body.classList.add("dark");
-    localStorage.setItem("theme", "dark");
-  } else {
-    document.body.classList.remove("dark");
-    localStorage.setItem("theme", "light");
-  }
-});
+if (toggle) {
+  toggle.addEventListener("change", () => {
+    if (toggle.checked) {
+      document.body.classList.add("dark");
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.body.classList.remove("dark");
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  });
+}
 
 window.addEventListener("DOMContentLoaded", () => {
   const savedTheme = localStorage.getItem("theme");
 
   if (savedTheme === "dark") {
     document.body.classList.add("dark");
-    document.getElementById("darkToggle").checked = true;
+    document.documentElement.classList.add("dark");
+
+    const darkToggle = document.getElementById("darkToggle");
+    if (darkToggle) darkToggle.checked = true;
   }
 
   const searchInput = document.getElementById("searchInput");
@@ -239,7 +234,9 @@ async function createPost() {
     await apiRequest("/posts", "POST", { title, description });
 
     closeCreateModal();
-    await loadPosts(document.getElementById("searchInput").value);
+
+    const searchInput = document.getElementById("searchInput");
+    await loadPosts(searchInput ? searchInput.value : "");
   } catch (err) {
     console.error(err);
     errorEl.textContent = err.message;
@@ -248,7 +245,11 @@ async function createPost() {
 
 function setSort(type) {
   currentSort = type;
-  loadPosts(document.getElementById("searchInput").value);
+
+  const searchInput = document.getElementById("searchInput");
+  const currentSearch = searchInput ? searchInput.value : "";
+
+  loadPosts(currentSearch);
 }
 
 function logout() {
@@ -257,56 +258,59 @@ function logout() {
   location.reload();
 }
 
-
-//HATTER
+/* HÁTTÉR */
 const canvas = document.getElementById("stars");
-const ctx = canvas.getContext("2d");
 
-let stars = [];
-const STAR_COUNT = 80;
+if (canvas) {
+  const ctx = canvas.getContext("2d");
 
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener("resize", resize);
-resize();
+  let stars = [];
+  const STAR_COUNT = 80;
 
-function createStars() {
-  stars = [];
-  for (let i = 0; i < STAR_COUNT; i++) {
-    stars.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      size: Math.random() * 1.5,
-      speed: Math.random() * 0.3 + 0.1
-    });
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
   }
-}
 
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  window.addEventListener("resize", resize);
+  resize();
 
-  const isDark = document.documentElement.classList.contains("dark");
-
-  stars.forEach(s => {
-    ctx.beginPath();
-    ctx.fillStyle = isDark
-  ? "rgba(255,255,255,0.6)"
-  : "rgb(74 144 226)";
-    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-    ctx.fill();
-
-    s.y += s.speed;
-
-    if (s.y > canvas.height) {
-      s.y = 0;
-      s.x = Math.random() * canvas.width;
+  function createStars() {
+    stars = [];
+    for (let i = 0; i < STAR_COUNT; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 1.5,
+        speed: Math.random() * 0.3 + 0.1
+      });
     }
-  });
+  }
 
-  requestAnimationFrame(draw);
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const isDark = document.documentElement.classList.contains("dark");
+
+    stars.forEach((s) => {
+      ctx.beginPath();
+      ctx.fillStyle = isDark
+        ? "rgba(255,255,255,0.6)"
+        : "rgb(74, 144, 226)";
+      ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+      ctx.fill();
+
+      s.y += s.speed;
+
+      if (s.y > canvas.height) {
+        s.y = 0;
+        s.x = Math.random() * canvas.width;
+      }
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  createStars();
+  draw();
 }
-
-createStars();
-draw();
