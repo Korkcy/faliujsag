@@ -71,8 +71,6 @@ html.dark input {
   transition: 0.2s;
 }
 
-
-
 .password-field span:hover {
   opacity: 1;
   transform: translateY(-50%) scale(1.1);
@@ -97,6 +95,12 @@ button {
 
 button:hover {
   transform: scale(1.05);
+  background: #357abd;
+  box-shadow: 0 3px 9px rgba(74,144, 226, 0.3);
+}
+
+button:active{
+    transform: scale(0.98);
 }
 
 /* ERROR */

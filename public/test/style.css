@@ -421,26 +421,70 @@ body.dark .filters button:hover {
   color:var(--text);
 }
 
-.password-box{
-  display:flex;
-  gap:10px;
+/* Password box teljes szélességű legyen */
+.password-box {
+    display: flex;
+    gap: 10px;
+    width: 100%;                    /* fontos! */
 }
 
-.password-box button{
-  border:none;
-  padding:8px 12px;
-  border-radius:10px;
-  cursor:pointer;
+.password-box input {
+    flex: 1;                        /* kitölti a rendelkezésre álló helyet */
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    background: var(--bg);
+    color: var(--text);
+    box-sizing: border-box;
 }
 
-.save-profile{
-  margin-top:10px;
-  border:none;
-  padding:10px;
-  border-radius:10px;
-  background:#4a90e2;
-  color:white;
-  cursor:pointer;
+/* Szem gomb szépen illeszkedjen */
+.password-box button {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;                /* kényelmes kattintási terület */
+    transition: 0.3s;
+}
+
+/* Szem gomb hover animáció */
+.password-box button:hover {
+    transform: scale(1.25);
+    opacity: 1;
+    transition: 0.3s;
+}
+
+/* ==================== SAVE CHANGES GOMB ==================== */
+
+.save-profile {
+    margin-top: 10px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    background: #4a90e2;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.25s ease;     /* szép animáció */
+    width: 100%;                    /* teljes szélességű legyen */
+}
+
+.save-profile:hover {
+    transform: scale(1.05);         /* kicsit nagyobbra nő */
+    background: #357abd;
+    box-shadow: 0 3px 9px rgba(74, 144, 226, 0.3);
+}
+
+.save-profile:active {
+    transform: scale(0.98);         /* kattintáskor kicsit kisebb */
 }
 
 .profile-posts{
