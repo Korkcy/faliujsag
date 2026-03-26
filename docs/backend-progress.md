@@ -180,3 +180,10 @@ Megjegyzés: A tényleges regisztrációs és autentikációs logika az authCont
 - A támogatott rendezési módok: newest, answers, rated
 - A keresés továbbra is a címben és leírásban történik.
 - A válaszban visszaadásra kerül: aktuális oldal, összes találat, összes oldal száma
+- A főoldali search inputot összekötöttem a backend search query paraméterével.
+- A Newest, Most answers és Top rated gombok most már a backend sort query paraméterét használják.
+- A frontend már nem lokálisan rendezi a posztokat, hanem a backendtől a rendezett adatokat kapja vissza.
+- A lekérésekhez a frontend automatikusan page és limit paramétereket is küld.
+- Elkészült a bejelentkezés és a regisztációs oldal, ahol email címet, jelszót, felhasználónevet kell megadni
+- Elkészült a profil oldal is, ahol lehetősége van egy felhasználónak arra, hogy frissítse a felhasználónevét, jelszavát, email-jét, emellett megjelennek a saját posztjai is
+- Elkészült az oldal logója is
