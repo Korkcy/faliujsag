@@ -86,6 +86,8 @@ async function loadPosts(searchTerm = "") {
           <span>👤 ${getAuthorName(post)}</span>
           <span>📅 ${formatDate(post.createdAt)}</span>
           <span>💬 ${post.answersCount || 0} replies</span>
+          <span>⭐ ${post.avgRating?.toFixed(1) || "N/A"}</span>
+          <span>👍 ${post.helpfulCount || 0}</span>
         </div>
       `;
 
@@ -138,9 +140,15 @@ function renderAnswers(container, answers, level = 0) {
     wrapper.style.marginTop = "12px";
 
     wrapper.innerHTML = `
-      <p><strong>${authorName}</strong> • ${formatDate(answer.createdAt)}</p>
-      <p>${answer.text}</p>
-    `;
+  <p><strong>${authorName}</strong> • ${formatDate(answer.createdAt)}</p>
+  <p>${answer.text}</p>
+
+  <div class="comment-actions">
+    <button onclick="showReplyBox('${answer._id}')">Válasz</button>
+  </div>
+
+  <div id="reply-${answer._id}"></div>
+`;
 
     container.appendChild(wrapper);
 
@@ -258,7 +266,77 @@ function logout() {
   location.reload();
 }
 
-/* HÁTTÉR */
+//komment
+let currentPostId = null;
+
+async function openModal(post) {
+  currentPostId = post._id; // EZ FONTOS
+
+  document.getElementById("modal-title").innerText = post.title;
+  document.getElementById("modal-author").innerText = `by ${getAuthorName(post)}`;
+  document.getElementById("modal-desc").innerText = post.description;
+
+  const comments = document.getElementById("modal-comments");
+  comments.innerHTML = "<h4>Comments:</h4><p>Betöltés...</p>";
+
+  try {
+    const response = await apiRequest(`/posts/${post._id}/answers`, "GET");
+    const answers = response.data.answers || [];
+
+    comments.innerHTML = "<h4>Comments:</h4>";
+
+    if (answers.length === 0) {
+      comments.innerHTML += "<p>Még nincsenek válaszok.</p>";
+    } else {
+      renderAnswers(comments, answers, 0);
+    }
+  } catch (err) {
+    comments.innerHTML = `<p>Hiba: ${err.message}</p>`;
+  }
+
+  document.getElementById("modal").style.display = "flex";
+}
+
+//uj komment
+async function submitComment() {
+  const text = document.getElementById("newCommentText").value.trim();
+  if (!text) return;
+
+  await apiRequest(`/posts/${currentPostId}/answers`, "POST", {
+    text
+  });
+
+  document.getElementById("newCommentText").value = "";
+
+  openModal({ _id: currentPostId }); // reload
+}
+
+//reply box
+function showReplyBox(answerId) {
+  const container = document.getElementById(`reply-${answerId}`);
+
+  container.innerHTML = `
+    <div class="comment-box">
+      <textarea id="replyText-${answerId}" placeholder="Válasz..."></textarea>
+      <button onclick="submitReply('${answerId}')">Küldés</button>
+    </div>
+  `;
+}
+
+//reply kuldes
+async function submitReply(parentId) {
+  const text = document.getElementById(`replyText-${parentId}`).value.trim();
+  if (!text) return;
+
+  await apiRequest(`/posts/${currentPostId}/answers`, "POST", {
+    text,
+    parentId
+  });
+
+  openModal({ _id: currentPostId }); // reload
+}
+
+//HÁTTÉR
 const canvas = document.getElementById("stars");
 
 if (canvas) {
@@ -314,3 +392,75 @@ if (canvas) {
   createStars();
   draw();
 }
+
+function toggleTheme() {
+  const isDark = document.documentElement.classList.toggle("dark");
+  localStorage.setItem("theme", isDark ? "dark" : "light");
+  updateIcon();
+}
+
+function updateIcon() {
+  const icon = document.getElementById("icon");
+  if (!icon) return;
+
+  const isDark = document.documentElement.classList.contains("dark");
+  icon.textContent = isDark ? "🌙" : "☀️";
+}
+
+window.addEventListener("DOMContentLoaded", updateIcon);
+
+//ratingek
+ratings: [
+  {
+    user: ObjectId,
+    helpful: Boolean,
+    score: Number // 1-10
+  }
+]
+
+let selectedHelpful = null;
+
+function ratePost(isHelpful) {
+  selectedHelpful = isHelpful;
+
+  document.getElementById("ratingMessage").textContent =
+    isHelpful ? "👍 Hasznosnak jelölted" : "👎 Nem hasznosnak jelölted";
+}
+
+//ertekeles kuldese
+async function submitRating() {
+  const score = parseInt(document.getElementById("ratingScore").value);
+
+  if (!score || score < 1 || score > 10) {
+    alert("Adj meg egy számot 1 és 10 között!");
+    return;
+  }
+
+  try {
+    await apiRequest(`/posts/${currentPostId}/rate`, "POST", {
+      helpful: selectedHelpful,
+      score
+    });
+
+    document.getElementById("ratingMessage").textContent =
+      "Köszönjük az értékelést!";
+
+    loadPosts(); // frissíti a listát
+  } catch (err) {
+    document.getElementById("ratingMessage").textContent = err.message;
+  }
+}
+
+//EGYSZERI ERTEKELES
+const alreadyRated = post.ratings.find(r => r.user == userId);
+
+if (alreadyRated) {
+  throw new Error("Már értékelted ezt a posztot!");
+}
+
+//atlag szamitas
+post.avgRating =
+  post.ratings.reduce((sum, r) => sum + r.score, 0) /
+  post.ratings.length;
+
+post.helpfulCount = post.ratings.filter(r => r.helpful).length;

@@ -1,20 +1,3 @@
-/* THEME */
-function toggleTheme() {
-  const isDark = document.documentElement.classList.toggle("dark");
-
-  localStorage.setItem("theme", isDark ? "dark" : "light");
-
-  updateIcon();
-}
-
-function updateIcon() {
-  const icon = document.getElementById("icon");
-  const isDark = document.documentElement.classList.contains("dark");
-
-  icon.textContent = isDark ? "🌙" : "☀️";
-}
-
-window.addEventListener("DOMContentLoaded", updateIcon);
 
 /* PASSWORD SHOW */
 function togglePassword(id) {
@@ -22,7 +5,7 @@ function togglePassword(id) {
   input.type = input.type === "password" ? "text" : "password";
 }
 
-/* REGISTER (placeholder) */
+//regisztracio
 function register() {
   const username = document.getElementById("username").value;
   const email = document.getElementById("email").value;
@@ -32,12 +15,12 @@ function register() {
   const error = document.getElementById("error");
 
   if (!username || !email || !password || !confirm) {
-    error.textContent = "Minden mezőt tölts ki!";
+    error.textContent = "Töltsd ki mindegyik mezőt!";
     return;
   }
 
   if (password !== confirm) {
-    error.textContent = "Passwords do not match";
+    error.textContent = "A jelszavak nem egyeznek!";
     return;
   }
 
@@ -48,6 +31,7 @@ function register() {
   // TODO: backend API
 }
 
+//CSILLAGOK
 const canvas = document.getElementById("stars");
 const ctx = canvas.getContext("2d");
 
@@ -60,6 +44,7 @@ function resize() {
 }
 window.addEventListener("resize", resize);
 resize();
+
 
 function createStars() {
   stars = [];
@@ -99,3 +84,22 @@ function draw() {
 
 createStars();
 draw();
+
+
+//DARKMODE
+function toggleTheme() {
+  const isDark = document.documentElement.classList.toggle("dark");
+
+  localStorage.setItem("theme", isDark ? "dark" : "light");
+
+  updateIcon();
+}
+
+function updateIcon() {
+  const icon = document.getElementById("icon");
+  const isDark = document.documentElement.classList.contains("dark");
+
+  icon.textContent = isDark ? "🌙" : "☀️";
+}
+
+window.addEventListener("DOMContentLoaded", updateIcon);
