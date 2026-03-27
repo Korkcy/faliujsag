@@ -187,3 +187,20 @@ Megjegyzés: A tényleges regisztrációs és autentikációs logika az authCont
 - Elkészült a bejelentkezés és a regisztációs oldal, ahol email címet, jelszót, felhasználónevet kell megadni
 - Elkészült a profil oldal is, ahol lehetősége van egy felhasználónak arra, hogy frissítse a felhasználónevét, jelszavát, email-jét, emellett megjelennek a saját posztjai is
 - Elkészült az oldal logója is
+
+## 2026-03-27 Működő bejelentkezés és regisztráció, lapozás, válasz írás, hasznosság, értékelés
+
+- A register oldalon a placeholder regisztrációs logikát lecseréltem valódi API hívásra.
+- A frontend a POST /api/v1/auth/signup endpointot hívja meg.
+- A beküldött adatok: username, email, school, password, passwordConfirm
+- Sikeres regisztráció után: a JWT token localStorage-ba mentésre kerül, a user átirányításra kerül a főoldalra.
+- Hibás regisztráció esetén a backend üzenete megjelenik a felületen.
+- A pagination lekorlátozza a megjelenő posztok számát 5-re.
+- Az oldalon lévő posztok között lehet lapozni.
+- A login oldal külön login.js fájlt kapott.
+- A frontend a POST /api/v1/auth/login endpointot hívja meg.
+- A beküldött adatok: email, password
+- Sikeres bejelentkezés után: a JWT token localStorage-ba mentésre kerül, a user adatai localStorage-ba mentésre kerülnek, a felhasználó átirányításra kerül a főoldalra
+- Hibás bejelentkezés esetén a backend hibaüzenete megjelenik a felületen.
+- Az oldalon, a bejelentkezett felhasználók, mostantól képesek posztot létrehozni.
+- Az oldalon lehetőség lesz majd a posztok/feltett kérdések hasznosságának értékelésére, ezt a felhasználók egy 10-es skálán tehetik majd meg

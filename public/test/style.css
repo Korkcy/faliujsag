@@ -177,7 +177,8 @@ input:checked+.slider {
 .container {
   margin-top: 80px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
 #posts {
@@ -758,4 +759,42 @@ html.dark .btn-outline:hover {
   border: none;
   background: var(--bg);
   color: var(--text);
+}
+
+.pagination {
+  width: 600px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin: 24px 0 40px;
+}
+
+.pagination button {
+  border: none;
+  background: var(--card);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.pagination button:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+html.dark .pagination button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#pageInfo {
+  min-width: 50px;
+  text-align: center;
+  font-weight: bold;
 }

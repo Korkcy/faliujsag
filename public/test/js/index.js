@@ -29,6 +29,10 @@ async function apiRequest(endpoint, method = "GET", data = null) {
 
 let posts = [];
 let currentSort = "newest";
+let currentPage = 1;
+let totalPages = 1;
+let currentSearchTerm = "";
+const POSTS_PER_PAGE = 5;
 
 function formatDate(dateString) {
   if (!dateString) return "Ismeretlen dátum";
@@ -43,60 +47,82 @@ function getAuthorName(post) {
   return "Ismeretlen felhasználó";
 }
 
-async function loadPosts(searchTerm = "") {
+async function loadPosts(searchTerm = currentSearchTerm, page = currentPage) {
   const container = document.getElementById("posts");
+  const pageInfo = document.getElementById("pageInfo");
+  const prevBtn = document.getElementById("prevPageBtn");
+  const nextBtn = document.getElementById("nextPageBtn");
+
   container.innerHTML = "<p>Betöltés...</p>";
 
   try {
+    currentSearchTerm = searchTerm;
+    currentPage = page;
+
     const params = new URLSearchParams();
 
-    if (searchTerm.trim()) {
-      params.append("search", searchTerm.trim());
+    if (currentSearchTerm.trim()) {
+      params.append("search", currentSearchTerm.trim());
     }
 
     if (currentSort) {
       params.append("sort", currentSort);
     }
 
-    // később paginationhez jól fog jönni
-    params.append("page", "1");
-    params.append("limit", "10");
+    params.append("page", currentPage);
+    params.append("limit", POSTS_PER_PAGE);
 
     const endpoint = `/posts?${params.toString()}`;
     console.log("Lekért endpoint:", endpoint);
 
     const response = await apiRequest(endpoint, "GET");
+
     posts = response.data.posts || [];
+    currentPage = response.currentPage || 1;
+    totalPages = response.totalPages || 1;
 
     container.innerHTML = "";
 
     if (posts.length === 0) {
       container.innerHTML = "<p>Nincsenek még posztok.</p>";
-      return;
+    } else {
+      posts.forEach((post) => {
+        const div = document.createElement("div");
+        div.className = "post";
+
+        div.innerHTML = `
+          <h3>${post.title}</h3>
+          <p>${post.description}</p>
+          <div class="post-meta">
+            <span>👤 ${getAuthorName(post)}</span>
+            <span>📅 ${formatDate(post.createdAt)}</span>
+            <span>💬 ${post.answersCount || 0} replies</span>
+          </div>
+        `;
+
+        div.onclick = () => openModal(post);
+        container.appendChild(div);
+      });
     }
 
-    posts.forEach((post) => {
-      const div = document.createElement("div");
-      div.className = "post";
-
-      div.innerHTML = `
-        <h3>${post.title}</h3>
-        <p>${post.description}</p>
-        <div class="post-meta">
-          <span>👤 ${getAuthorName(post)}</span>
-          <span>📅 ${formatDate(post.createdAt)}</span>
-          <span>💬 ${post.answersCount || 0} replies</span>
-          <span>⭐ ${post.avgRating?.toFixed(1) || "N/A"}</span>
-          <span>👍 ${post.helpfulCount || 0}</span>
-        </div>
-      `;
-
-      div.onclick = () => openModal(post);
-      container.appendChild(div);
-    });
+    pageInfo.textContent = `${currentPage} / ${totalPages}`;
+    prevBtn.disabled = currentPage <= 1;
+    nextBtn.disabled = currentPage >= totalPages;
   } catch (err) {
     console.error(err);
     container.innerHTML = `<p>Hiba történt a posztok betöltésekor: ${err.message}</p>`;
+  }
+}
+
+function goToPreviousPage() {
+  if (currentPage > 1) {
+    loadPosts(currentSearchTerm, currentPage - 1);
+  }
+}
+
+function goToNextPage() {
+  if (currentPage < totalPages) {
+    loadPosts(currentSearchTerm, currentPage + 1);
   }
 }
 
@@ -199,13 +225,24 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   const searchInput = document.getElementById("searchInput");
+  const prevBtn = document.getElementById("prevPageBtn");
+  const nextBtn = document.getElementById("nextPageBtn");
 
   if (searchInput) {
     searchInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
-        loadPosts(searchInput.value);
+        currentPage = 1;
+        loadPosts(searchInput.value, 1);
       }
     });
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener("click", goToPreviousPage);
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener("click", goToNextPage);
   }
 
   loadPosts();
@@ -253,11 +290,8 @@ async function createPost() {
 
 function setSort(type) {
   currentSort = type;
-
-  const searchInput = document.getElementById("searchInput");
-  const currentSearch = searchInput ? searchInput.value : "";
-
-  loadPosts(currentSearch);
+  currentPage = 1;
+  loadPosts(currentSearchTerm, 1);
 }
 
 function logout() {
@@ -268,34 +302,6 @@ function logout() {
 
 //komment
 let currentPostId = null;
-
-async function openModal(post) {
-  currentPostId = post._id; // EZ FONTOS
-
-  document.getElementById("modal-title").innerText = post.title;
-  document.getElementById("modal-author").innerText = `by ${getAuthorName(post)}`;
-  document.getElementById("modal-desc").innerText = post.description;
-
-  const comments = document.getElementById("modal-comments");
-  comments.innerHTML = "<h4>Comments:</h4><p>Betöltés...</p>";
-
-  try {
-    const response = await apiRequest(`/posts/${post._id}/answers`, "GET");
-    const answers = response.data.answers || [];
-
-    comments.innerHTML = "<h4>Comments:</h4>";
-
-    if (answers.length === 0) {
-      comments.innerHTML += "<p>Még nincsenek válaszok.</p>";
-    } else {
-      renderAnswers(comments, answers, 0);
-    }
-  } catch (err) {
-    comments.innerHTML = `<p>Hiba: ${err.message}</p>`;
-  }
-
-  document.getElementById("modal").style.display = "flex";
-}
 
 //uj komment
 async function submitComment() {
@@ -409,15 +415,6 @@ function updateIcon() {
 
 window.addEventListener("DOMContentLoaded", updateIcon);
 
-//ratingek
-ratings: [
-  {
-    user: ObjectId,
-    helpful: Boolean,
-    score: Number // 1-10
-  }
-]
-
 let selectedHelpful = null;
 
 function ratePost(isHelpful) {
@@ -450,17 +447,3 @@ async function submitRating() {
     document.getElementById("ratingMessage").textContent = err.message;
   }
 }
-
-//EGYSZERI ERTEKELES
-const alreadyRated = post.ratings.find(r => r.user == userId);
-
-if (alreadyRated) {
-  throw new Error("Már értékelted ezt a posztot!");
-}
-
-//atlag szamitas
-post.avgRating =
-  post.ratings.reduce((sum, r) => sum + r.score, 0) /
-  post.ratings.length;
-
-post.helpfulCount = post.ratings.filter(r => r.helpful).length;

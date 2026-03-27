@@ -1,3 +1,31 @@
+const API_BASE = "/api/v1";
+
+async function apiRequest(endpoint, method = "GET", data = null) {
+  const token = localStorage.getItem("token");
+
+  const options = {
+    method,
+    headers: {}
+  };
+
+  if (data) {
+    options.headers["Content-Type"] = "application/json";
+    options.body = JSON.stringify(data);
+  }
+
+  if (token) {
+    options.headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE}${endpoint}`, options);
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Hiba történt.");
+  }
+
+  return result;
+}
 
 /* PASSWORD SHOW */
 function togglePassword(id) {
@@ -6,15 +34,16 @@ function togglePassword(id) {
 }
 
 //regisztracio
-function register() {
-  const username = document.getElementById("username").value;
-  const email = document.getElementById("email").value;
+async function register() {
+  const username = document.getElementById("username").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const school = document.getElementById("school").value.trim();
   const password = document.getElementById("password").value;
   const confirm = document.getElementById("confirm").value;
 
   const error = document.getElementById("error");
 
-  if (!username || !email || !password || !confirm) {
+  if (!username || !email || !school || !password || !confirm) {
     error.textContent = "Töltsd ki mindegyik mezőt!";
     return;
   }
@@ -26,9 +55,31 @@ function register() {
 
   error.textContent = "";
 
-  alert("Registered (placeholder)");
+  try {
+    const response = await apiRequest("/auth/signup", "POST", {
+      username,
+      email,
+      school,
+      password,
+      passwordConfirm: confirm
+    });
 
-  // TODO: backend API
+    // token mentése
+    if (response.token) {
+      localStorage.setItem("token", response.token);
+    }
+
+    // user adatok mentése opcionálisan
+    if (response.data && response.data.user) {
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+    }
+
+    // siker után főoldal
+    window.location.href = "index.html";
+  } catch (err) {
+    console.error(err);
+    error.textContent = err.message;
+  }
 }
 
 //CSILLAGOK
@@ -102,4 +153,12 @@ function updateIcon() {
   icon.textContent = isDark ? "🌙" : "☀️";
 }
 
-window.addEventListener("DOMContentLoaded", updateIcon);
+window.addEventListener("DOMContentLoaded", () => {
+  updateIcon();
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      register();
+    }
+  });
+});
