@@ -296,7 +296,6 @@ function setSort(type) {
 
 function logout() {
   localStorage.removeItem("token");
-  alert("Sikeres kijelentkezés.");
   location.reload();
 }
 
@@ -447,3 +446,71 @@ async function submitRating() {
     document.getElementById("ratingMessage").textContent = err.message;
   }
 }
+
+//navbar check
+function renderNavbar() {
+  const navRight = document.getElementById("navRight");
+  const token = localStorage.getItem("token");
+
+  if (!navRight) return;
+
+  if (token) {
+    navRight.innerHTML = `
+      <div class="profile-menu">
+        <div class="profile-icon" onclick="toggleDropdown()">👤</div>
+
+        <div class="dropdown" id="dropdown">
+          <a href="profile.html">Profil</a>
+          <hr>
+          <button onclick="logout()" type="button" class="logout-btn">
+            Kijelentkezés
+        </button>
+        </div>
+      </div>
+    `;
+  } else {
+    navRight.innerHTML = `
+      <a href="register.html" class="btn-outline">Regisztráció</a>
+      <a href="login.html" class="btn-primary">Bejelentkezés</a>
+    `;
+  }
+}
+
+//meghivas
+
+window.addEventListener("DOMContentLoaded", () => {
+  const savedTheme = localStorage.getItem("theme");
+
+  if (savedTheme === "dark") {
+    document.body.classList.add("dark");
+    document.documentElement.classList.add("dark");
+
+    const darkToggle = document.getElementById("darkToggle");
+    if (darkToggle) darkToggle.checked = true;
+  }
+
+  const searchInput = document.getElementById("searchInput");
+  const prevBtn = document.getElementById("prevPageBtn");
+  const nextBtn = document.getElementById("nextPageBtn");
+
+  if (searchInput) {
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        currentPage = 1;
+        loadPosts(searchInput.value, 1);
+      }
+    });
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener("click", goToPreviousPage);
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener("click", goToNextPage);
+  }
+
+  renderNavbar();
+
+  loadPosts();
+});
