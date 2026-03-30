@@ -1,219 +1,215 @@
-/* DROPDOWN */
-function toggleDropdown() {
-  const d = document.getElementById("dropdown");
-  d.style.display = d.style.display === "block" ? "none" : "block";
+// ====================== COMMON FUNCTIONS ======================
+function toggleTheme() {
+  const isDark = document.documentElement.classList.toggle("dark");
+  localStorage.setItem("theme", isDark ? "dark" : "light");
+  updateIcon();
 }
 
-/* DARK MODE */
-document.getElementById("darkToggle").addEventListener("change", () => {
-  document.body.classList.toggle("dark");
-});
+function updateIcon() {
+  const icon = document.getElementById("icon");
+  if (icon) {
+    const isDark = document.documentElement.classList.contains("dark");
+    icon.textContent = isDark ? "🌙" : "☀️";
+  }
+}
 
-const toggle = document.getElementById("darkToggle");
+function toggleDropdown() {
+  const dropdown = document.getElementById("dropdown");
+  if (dropdown) {
+    dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+  }
+}
 
-toggle.addEventListener("change", () => {
-  if (toggle.checked) {
-    document.body.classList.add("dark");
-    localStorage.setItem("theme", "dark"); // mentés
+function logout() {
+  if (!confirm("Biztosan ki szeretnél jelentkezni?")) return;
+
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  window.location.href = "login.html";
+}
+
+// ====================== NAVBAR ======================
+function renderNavbar() {
+  const navRight = document.getElementById("navRight");
+  if (!navRight) return;
+
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    navRight.innerHTML = `
+      <div class="profile-menu">
+        <div class="profile-icon" id="profileIcon">👤</div>
+        <div class="dropdown" id="dropdown">
+          <a href="profile.html">Profil</a>
+          <hr>
+          <button id="logoutBtn" class="logout-btn">Kijelentkezés</button>
+        </div>
+      </div>
+    `;
+
+    // Események hozzáadása
+    setTimeout(() => {
+      const profileIcon = document.getElementById("profileIcon");
+      const logoutBtn = document.getElementById("logoutBtn");
+
+      if (profileIcon) profileIcon.addEventListener("click", toggleDropdown);
+      if (logoutBtn) logoutBtn.addEventListener("click", logout);
+    }, 10);
+
   } else {
-    document.body.classList.remove("dark");
-    localStorage.setItem("theme", "light"); // mentés
+    navRight.innerHTML = `
+      <a href="register.html" class="btn-outline">Regisztráció</a>
+      <a href="login.html" class="btn-primary">Bejelentkezés</a>
+    `;
   }
-});
+}
 
-window.addEventListener("DOMContentLoaded", () => {
-  const savedTheme = localStorage.getItem("theme");
-
-  if (savedTheme === "dark") {
-    document.body.classList.add("dark");
-    document.getElementById("darkToggle").checked = true;
-  }
-});
-
-  if (localStorage.getItem("theme") === "dark") {
-    document.documentElement.classList.add("dark");
-  }
-
-
-let userPosts = [];
-
+// ====================== PROFILE FUNCTIONS ======================
 async function loadProfile() {
-    try {
-        const res = await apiRequest("/users/me");
-        const user = res.data.user;
+  try {
+    const res = await apiRequest("/users/me");
+    const user = res.data?.user || res.user;
 
-        document.getElementById("email").value = user.email || "";
-        document.getElementById("username").value = user.username || "";
-        document.getElementById("school").value = user.school || "";
-
-        loadUserPosts();
-    } catch (err) {
-        console.error(err);
-    }
+    document.getElementById("email").value = user.email || "";
+    document.getElementById("username").value = user.username || "";
+    document.getElementById("school").value = user.school || "";
+    loadUserPosts();
+  } catch (err) {
+    console.error("Profile load error:", err);
+  }
 }
 
 function togglePassword() {
-    const input = document.getElementById("password");
-
-    if (input.type === "password") {
-        input.type = "text";
-    } else {
-        input.type = "password";
-    }
-}
-
-async function saveProfile() {
-    const email = document.getElementById("email").value;
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-    const school = document.getElementById("school").value;
-
-    try {
-        await apiRequest("/users/me", "PATCH", {
-            email,
-            username,
-            password,
-            school
-        });
-
-        alert("Profile updated!");
-    } catch (err) {
-        alert(err.message);
-    }
-}
-
-/* PROFILE IMAGE */
-document.getElementById("imageUpload").addEventListener("change", function () {
-    const file = this.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        document.getElementById("profileImage").src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-});
-
-/* USER POSTS */
-
-async function loadUserPosts() {
-    const container = document.getElementById("userPosts");
-    container.innerHTML = "Loading...";
-
-    try {
-        const res = await apiRequest("/posts/me");
-        userPosts = res.data.posts;
-
-        container.innerHTML = "";
-
-        userPosts.forEach(post => {
-            const div = document.createElement("div");
-            div.className = "user-post";
-
-            div.innerHTML = `
-                <h3>${post.title}</h3>
-                <p>${post.description}</p>
-
-                <div class="post-actions">
-                    <button onclick="editPost('${post._id}')">Edit</button>
-                    <button onclick="deletePost('${post._id}')">Delete</button>
-                </div>
-            `;
-
-            container.appendChild(div);
-        });
-
-    } catch (err) {
-        container.innerHTML = "Error loading posts";
-    }
-}
-
-async function deletePost(id) {
-    if (!confirm("Delete this post?")) return;
-
-    try {
-        await apiRequest(`/posts/${id}`, "DELETE");
-        loadUserPosts();
-    } catch (err) {
-        alert(err.message);
-    }
-}
-
-function editPost(id) {
-    const post = userPosts.find(p => p._id === id);
-
-    const title = prompt("Edit title:", post.title);
-    const description = prompt("Edit description:", post.description);
-
-    if (!title) return;
-
-    updatePost(id, title, description);
-}
-
-async function updatePost(id, title, description) {
-    try {
-        await apiRequest(`/posts/${id}`, "PATCH", {
-            title,
-            description
-        });
-
-        loadUserPosts();
-    } catch (err) {
-        alert(err.message);
-    }
-}
-
-window.addEventListener("DOMContentLoaded", loadProfile);
-
-//HATTER
-const canvas = document.getElementById("stars");
-const ctx = canvas.getContext("2d");
-
-let stars = [];
-const STAR_COUNT = 80;
-
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener("resize", resize);
-resize();
-
-function createStars() {
-  stars = [];
-  for (let i = 0; i < STAR_COUNT; i++) {
-    stars.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      size: Math.random() * 1.5,
-      speed: Math.random() * 0.3 + 0.1
-    });
+  const input = document.getElementById("password");
+  if (input) {
+    input.type = input.type === "password" ? "text" : "password";
   }
 }
 
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+async function saveProfile() {
+  const email = document.getElementById("email").value.trim();
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+  const school = document.getElementById("school").value.trim();
 
-  const isDark = document.documentElement.classList.contains("dark");
-
-  stars.forEach(s => {
-    ctx.beginPath();
-    ctx.fillStyle = isDark
-  ? "rgba(255,255,255,0.6)"
-  : "rgb(74 144 226)";
-    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-    ctx.fill();
-
-    s.y += s.speed;
-
-    if (s.y > canvas.height) {
-      s.y = 0;
-      s.x = Math.random() * canvas.width;
-    }
-  });
-
-  requestAnimationFrame(draw);
+  try {
+    await apiRequest("/users/me", "PATCH", { email, username, password, school });
+    alert("Profil sikeresen frissítve!");
+  } catch (err) {
+    alert(err.message || "Hiba történt a mentés során.");
+  }
 }
 
-createStars();
-draw();
+// User posts (maradhat a régi, ha működik)
+let userPosts = [];
+
+async function loadUserPosts() {
+  const container = document.getElementById("userPosts");
+  if (!container) return;
+  container.innerHTML = "Betöltés...";
+
+  try {
+    const res = await apiRequest("/posts/me");
+    userPosts = res.data?.posts || [];
+
+    container.innerHTML = "";
+
+    userPosts.forEach(post => {
+      const div = document.createElement("div");
+      div.className = "user-post";
+      div.innerHTML = `
+        <h3>${post.title || ''}</h3>
+        <p>${post.description || ''}</p>
+        <div class="post-actions">
+          <button onclick="editPost('${post._id}')">Edit</button>
+          <button onclick="deletePost('${post._id}')">Delete</button>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+  } catch (err) {
+    container.innerHTML = "Hiba a posztok betöltésekor";
+  }
+}
+
+// ====================== STARS BACKGROUND ======================
+const canvas = document.getElementById("stars");
+
+if (canvas) {
+  const ctx = canvas.getContext("2d");
+
+  let stars = [];
+  const STAR_COUNT = 80;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  window.addEventListener("resize", resize);
+  resize();
+
+  function createStars() {
+    stars = [];
+    for (let i = 0; i < STAR_COUNT; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 1.5,
+        speed: Math.random() * 0.3 + 0.1
+      });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const isDark = document.documentElement.classList.contains("dark");
+
+    stars.forEach((s) => {
+      ctx.beginPath();
+      ctx.fillStyle = isDark
+        ? "rgba(255,255,255,0.6)"
+        : "rgb(74, 144, 226)";
+      ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+      ctx.fill();
+
+      s.y += s.speed;
+
+      if (s.y > canvas.height) {
+        s.y = 0;
+        s.x = Math.random() * canvas.width;
+      }
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  createStars();
+  draw();
+}
+
+// ====================== INIT ======================
+window.addEventListener("DOMContentLoaded", () => {
+  // Theme betöltése
+  if (localStorage.getItem("theme") === "dark") {
+    document.documentElement.classList.add("dark");
+  }
+  updateIcon();
+
+  // Navbar
+  renderNavbar();
+
+  // Profile
+  loadProfile();
+
+  // Canvas
+  resizeCanvas();
+  createStars();
+  drawStars();
+
+  window.addEventListener("resize", () => {
+    resizeCanvas();
+    createStars();
+  });
+});

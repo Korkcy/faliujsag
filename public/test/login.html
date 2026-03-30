@@ -1,55 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="hu">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bejelentkezés</title>
 
-    <!-- DARK MODE LOAD -->
+    <!-- Dark mode betöltése oldalfrissítés előtt -->
     <script>
-        if (localStorage.getItem("theme") === "dark") {
+        if (localStorage.getItem("theme") === "dark" || 
+            (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
             document.documentElement.classList.add("dark");
         }
     </script>
 
     <link rel="stylesheet" href="register.css">
 </head>
-
 <body>
     <canvas id="stars"></canvas>
 
-    <!-- DARK MODE TOGGLE -->
+    <!-- Dark mode toggle -->
     <div class="theme-toggle" onclick="toggleTheme()">
         <div id="icon">🌙</div>
     </div>
 
-    <!-- REGISTER BOX -->
+    <!-- Bejelentkező doboz -->
     <div class="register-container">
         <div class="register-box">
             <div class="image-container">
                 <img src="./kepek/tabla.png" alt="Faliújság" class="register-image">
             </div>
 
-
             <h2>Bejelentkezés</h2>
-            <input type="email" placeholder="E-mail" id="email">
-
+            
+            <input type="email" placeholder="E-mail" id="email" autocomplete="email">
+            
             <div class="password-field">
-                <input type="password" placeholder="Jelszó" id="password">
+                <input type="password" placeholder="Jelszó" id="password" autocomplete="current-password">
                 <span onclick="togglePassword('password')">👁️</span>
             </div>
-
 
             <button onclick="login()">Bejelentkezés</button>
 
             <p>Nincs fiókod? <a href="register.html" id="jelentkezz">Regisztrálj!</a></p>
 
             <p class="error" id="error"></p>
-
         </div>
     </div>
 
     <script src="./js/login.js"></script>
 </body>
-
 </html>

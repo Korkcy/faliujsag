@@ -17,31 +17,23 @@
 
     <canvas id="stars"></canvas>
     <nav class="navbar">
-        <div class="nav-center">
-            <button onclick="setFeed('home')"><a href="index.html">Home</a></button>
-            <button onclick="setFeed('following')">Following</button>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <div id="icon">🌙</div>
+    </div>
+
+    <!--kozep-->
+    <div class="nav-center">
+      <div class="nav-center">
+        <div class="image-container">
+          <a href="index.html"><img src="./kepek/tabla.png" alt="Faliújság" class="register-image"></a>
         </div>
+      </div>
+    </div>
 
-        <div class="nav-right">
-            <button class="notif-btn">🔔</button>
+    <!--jobb-->
+    <div class="nav-right" id="navRight"></div>
+  </nav>
 
-            <div class="profile">
-                <img src="https://i.pravatar.cc/40" onclick="toggleDropdown()" />
-                <div class="dropdown" id="dropdown">
-                    <div><a href="profile.html" id="profil">Profile</a></div>
-                    <div>Settings</div>
-
-                    <div class="dark-toggle">
-                        Dark mode
-                        <label class="switch">
-                            <input type="checkbox" id="darkToggle">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
 
 
 
@@ -53,11 +45,8 @@
 
             <div class="profile-header">
                 <img id="profileImage" src="https://i.pravatar.cc/120">
-                <input type="file" id="imageUpload" accept="image/*" hidden>
-
-                <button onclick="document.getElementById('imageUpload').click()">
-                    Change photo
-                </button>
+                
+                <input type="text" id="profile-pic">
             </div>
 
             <div class="profile-info">

@@ -76,11 +76,10 @@ html.dark .nav-center button:hover {
 
 .nav-right {
   position: absolute;
-  right: 35px;
+  right: 50px;
   display: flex;
   align-items: center;
   gap: 10px;
-  /* EZ AD TERET */
 }
 
 .profile {
@@ -248,14 +247,28 @@ html.dark .divider {
   background: rgba(255, 255, 255, 0.12);
 }
 
-/* LOGOUT */
-.logout {
-  color: #e74c3c;
-  font-weight: bold;
+.logout-btn {
+  color: #e74c3c !important;
+  font-weight: 600;
+  width: 100%;
+  text-align: left;
+  padding: 10px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.2s;
 }
 
-.logout:hover {
-  background: rgba(231, 76, 60, 0.1);
+.logout-btn:hover {
+  background: rgba(231, 76, 60, 0.15) !important;
+  color: #c0392b !important;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* TOP BAR */
@@ -797,4 +810,8 @@ html.dark .pagination button:hover {
   min-width: 50px;
   text-align: center;
   font-weight: bold;
+}
+
+.profile-menu {
+  margin-right: 20px;
 }
