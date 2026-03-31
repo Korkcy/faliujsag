@@ -18,10 +18,16 @@ async function apiRequest(endpoint, method = "GET", data = null) {
   }
 
   const response = await fetch(`${API_BASE}${endpoint}`, options);
-  const result = await response.json();
+
+  let result = null;
+  const contentType = response.headers.get("content-type");
+
+  if (contentType && contentType.includes("application/json")) {
+    result = await response.json();
+  }
 
   if (!response.ok) {
-    throw new Error(result.message || "Hiba történt.");
+    throw new Error(result?.message || "Hiba történt.");
   }
 
   return result;
@@ -45,6 +51,33 @@ function getAuthorName(post) {
     return post.author.username || "Ismeretlen felhasználó";
   }
   return "Ismeretlen felhasználó";
+}
+
+function getCurrentUser() {
+  const rawUser = localStorage.getItem("user");
+  if (!rawUser) return null;
+
+  try {
+    return JSON.parse(rawUser);
+  } catch {
+    return null;
+  }
+}
+
+function goToUserProfile(userId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  const currentUser = getCurrentUser();
+
+  if (currentUser && (currentUser.id === userId || currentUser._id === userId)) {
+    window.location.href = "profile.html";
+    return;
+  }
+
+  window.location.href = `user.html?id=${userId}`;
 }
 
 async function loadPosts(searchTerm = currentSearchTerm, page = currentPage) {
@@ -90,15 +123,25 @@ async function loadPosts(searchTerm = currentSearchTerm, page = currentPage) {
         const div = document.createElement("div");
         div.className = "post";
 
+        const authorId =
+          post.author && typeof post.author === "object"
+            ? post.author._id
+            : null;
+
         div.innerHTML = `
-          <h3>${post.title}</h3>
-          <p>${post.description}</p>
-          <div class="post-meta">
-            <span>👤 ${getAuthorName(post)}</span>
-            <span>📅 ${formatDate(post.createdAt)}</span>
-            <span>💬 ${post.answersCount || 0} replies</span>
-          </div>
-        `;
+  <h3>${post.title}</h3>
+  <p>${post.description}</p>
+  <div class="post-meta">
+    <span>
+      👤 ${authorId
+            ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${getAuthorName(post)}</a>`
+            : getAuthorName(post)
+          }
+    </span>
+    <span>📅 ${formatDate(post.createdAt)}</span>
+    <span>💬 ${post.answersCount || 0} replies</span>
+  </div>
+`;
 
         div.onclick = () => openModal(post);
         container.appendChild(div);
@@ -126,9 +169,31 @@ function goToNextPage() {
   }
 }
 
-async function openModal(post) {
+
+
+async function openModal(postOrId) {
+  let post;
+
+  if (typeof postOrId === "string" || postOrId._id) {
+    const id = typeof postOrId === "string" ? postOrId : postOrId._id;
+
+    const response = await apiRequest(`/posts/${id}`, "GET");
+    post = response.data.post;
+  } else {
+    post = postOrId;
+  }
+
+  currentPostId = post._id;
+
   document.getElementById("modal-title").innerText = post.title;
-  document.getElementById("modal-author").innerText = `by ${getAuthorName(post)}`;
+  const postAuthorId =
+    post.author && typeof post.author === "object"
+      ? post.author._id
+      : null;
+
+  document.getElementById("modal-author").innerHTML = postAuthorId
+    ? `by <a href="#" onclick="goToUserProfile('${postAuthorId}', event)">${getAuthorName(post)}</a>`
+    : `by ${getAuthorName(post)}`;
   document.getElementById("modal-desc").innerText = post.description;
 
   const comments = document.getElementById("modal-comments");
@@ -146,11 +211,11 @@ async function openModal(post) {
       renderAnswers(comments, answers, 0);
     }
   } catch (err) {
-    console.error(err);
-    comments.innerHTML = `<p>Hiba történt a válaszok betöltésekor: ${err.message}</p>`;
+    comments.innerHTML = `<p>Hiba: ${err.message}</p>`;
   }
 
   document.getElementById("modal").style.display = "flex";
+  updateCommentUI();
 }
 
 function renderAnswers(container, answers, level = 0) {
@@ -160,13 +225,25 @@ function renderAnswers(container, answers, level = 0) {
         ? answer.author.username
         : "Ismeretlen felhasználó";
 
+    const authorId =
+      answer.author && typeof answer.author === "object"
+        ? answer.author._id
+        : null;
     const wrapper = document.createElement("div");
     wrapper.className = "answer-item";
     wrapper.style.marginLeft = `${level * 20}px`;
     wrapper.style.marginTop = "12px";
 
     wrapper.innerHTML = `
-  <p><strong>${authorName}</strong> • ${formatDate(answer.createdAt)}</p>
+  <p>
+    <strong>
+      ${authorId
+        ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${authorName}</a>`
+        : authorName
+      }
+    </strong>
+    • ${formatDate(answer.createdAt)}
+  </p>
   <p>${answer.text}</p>
 
   <div class="comment-actions">
@@ -307,17 +384,27 @@ async function submitComment() {
   const text = document.getElementById("newCommentText").value.trim();
   if (!text) return;
 
+  if (!localStorage.getItem("token")) {
+    alert("Kommenteléshez jelentkezz be!");
+    return;
+  }
+
   await apiRequest(`/posts/${currentPostId}/answers`, "POST", {
     text
   });
 
   document.getElementById("newCommentText").value = "";
 
-  openModal({ _id: currentPostId }); // reload
+  openModal(currentPostId);
 }
 
 //reply box
 function showReplyBox(answerId) {
+  if (!localStorage.getItem("token")) {
+    alert("Válaszoláshoz jelentkezz be!");
+    return;
+  }
+
   const container = document.getElementById(`reply-${answerId}`);
 
   container.innerHTML = `
@@ -333,12 +420,28 @@ async function submitReply(parentId) {
   const text = document.getElementById(`replyText-${parentId}`).value.trim();
   if (!text) return;
 
+  if (!localStorage.getItem("token")) {
+    alert("Válaszoláshoz jelentkezz be!");
+    return;
+  }
+
   await apiRequest(`/posts/${currentPostId}/answers`, "POST", {
     text,
-    parentId
+    replyTo: parentId   // ⚠️ EZ FONTOS (NEM parentId!)
   });
 
-  openModal({ _id: currentPostId }); // reload
+  openModal(currentPostId);
+}
+
+function updateCommentUI() {
+  const token = localStorage.getItem("token");
+  const box = document.getElementById("commentBox");
+
+  if (!box) return;
+
+  if (!token) {
+    box.innerHTML = "<p>Kommenteléshez jelentkezz be.</p>";
+  }
 }
 
 //HÁTTÉR

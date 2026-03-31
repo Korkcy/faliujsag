@@ -97,6 +97,42 @@ exports.getPost = async (req, res, next) => {
   }
 };
 
+exports.getMyPosts = async (req, res, next) => {
+  try {
+    const posts = await Post.find({author: req.user._id})
+      .sort({createdAt: -1})
+      .populate("author", "username school profilePicture role");
+    
+    res.status(200).json({
+      status: "success",
+      results: posts.length,
+      data: {
+        posts
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getPostsByUserId = async (req, res, next) => {
+  try {
+    const posts = await Post.find({author: req.params.id})
+      .sort({createdAt: -1})
+      .populate("author", "username school profilePicture role");
+
+    res.status(200).json({
+      status: "success",
+      results: posts.length,
+      data: {
+        posts
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 exports.createPost = async (req, res, next) => {
   try {
     req.body.author = req.user._id;

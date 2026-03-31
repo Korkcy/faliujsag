@@ -18,10 +18,16 @@ async function apiRequest(endpoint, method = "GET", data = null) {
   }
 
   const response = await fetch(`${API_BASE}${endpoint}`, options);
-  const result = await response.json();
+
+  let result = null;
+  const contentType = response.headers.get("content-type");
+
+  if (contentType && contentType.includes("application/json")) {
+    result = await response.json();
+  }
 
   if (!response.ok) {
-    throw new Error(result.message || "Hiba történt.");
+    throw new Error(result?.message || "Hiba történt.");
   }
 
   return result;
@@ -117,8 +123,8 @@ function draw() {
   stars.forEach(s => {
     ctx.beginPath();
     ctx.fillStyle = isDark
-  ? "rgba(255,255,255,0.6)"
-  : "rgb(74 144 226)";
+      ? "rgba(255,255,255,0.6)"
+      : "rgb(74 144 226)";
     ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
     ctx.fill();
 
