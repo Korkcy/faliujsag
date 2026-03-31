@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <title>Felhasználó profilja</title>
+</head>
+<body>
+    <canvas id="stars"></canvas>
+
+    <nav class="navbar">
+        <div class="theme-toggle" onclick="toggleTheme()">
+            <div id="icon">🌙</div>
+        </div>
+
+        <div class="nav-center">
+            <div class="nav-center">
+                <div class="image-container">
+                    <a href="index.html"><img src="./kepek/tabla.png" alt="Faliújság" class="register-image"></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-right" id="navRight"></div>
+    </nav>
+
+    <div class="container">
+        <div class="profile-page">
+            <div class="profile-card">
+                <div class="profile-header">
+                    <img id="profileImage" src="https://i.pravatar.cc/120" alt="Profile picture">
+                </div>
+
+                <div class="profile-info">
+                    <div class="profile-row">
+                        <label>Email</label>
+                        <input type="email" id="email" disabled>
+                    </div>
+
+                    <div class="profile-row">
+                        <label>Username</label>
+                        <input type="text" id="username" disabled>
+                    </div>
+
+                    <div class="profile-row">
+                        <label>School</label>
+                        <input type="text" id="school" disabled>
+                    </div>
+                </div>
+
+                <div class="profile-posts">
+                    <h2>User posts</h2>
+                    <div id="userPosts"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="userPostModal" onclick="closeUserPostModal(event)">
+        <div class="modal-content">
+            <h2 id="userModalTitle"></h2>
+            <p id="userModalAuthor"></p>
+            <p id="userModalDesc"></p>
+            <hr>
+            <div id="userModalComments"></div>
+        </div>
+    </div>
+
+    <script src="./js/userProfile.js"></script>
+</body>
+</html>

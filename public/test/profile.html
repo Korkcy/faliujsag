@@ -17,81 +17,144 @@
 
     <canvas id="stars"></canvas>
     <nav class="navbar">
-    <div class="theme-toggle" onclick="toggleTheme()">
-      <div id="icon">🌙</div>
-    </div>
-
-    <!--kozep-->
-    <div class="nav-center">
-      <div class="nav-center">
-        <div class="image-container">
-          <a href="index.html"><img src="./kepek/tabla.png" alt="Faliújság" class="register-image"></a>
+        <div class="theme-toggle" onclick="toggleTheme()">
+            <div id="icon">🌙</div>
         </div>
-      </div>
-    </div>
 
-    <!--jobb-->
-    <div class="nav-right" id="navRight"></div>
-  </nav>
+        <!--kozep-->
+        <div class="nav-center">
+            <div class="nav-center">
+                <div class="image-container">
+                    <a href="index.html"><img src="./kepek/tabla.png" alt="Faliújság" class="register-image"></a>
+                </div>
+            </div>
+        </div>
+
+        <!--jobb-->
+        <div class="nav-right" id="navRight"></div>
+    </nav>
 
 
 
 
     <div class="container">
-    <div class="profile-page">
+        <div class="profile-page">
 
-        <!-- PROFILE CARD -->
-        <div class="profile-card">
+            <!-- PROFILE CARD -->
+            <div class="profile-card">
 
-            <div class="profile-header">
-                <img id="profileImage" src="https://i.pravatar.cc/120">
-                
-                <input type="text" id="profile-pic">
-            </div>
+                <div class="profile-header">
+                    <img id="profileImage" src="https://i.pravatar.cc/120" alt="Profile picture">
 
-            <div class="profile-info">
-
-                <div class="profile-row">
-                    <label>Email</label>
-                    <input type="email" id="email">
-                </div>
-
-                <div class="profile-row">
-                    <label>Username</label>
-                    <input type="text" id="username">
-                </div>
-
-                <div class="profile-row">
-                    <label>Password</label>
-                    <div class="password-box">
-                        <input type="password" id="password">
-                        <button onclick="togglePassword('confirm')">👁️</button>
+                    <div class="profile-header-actions">
+                        <button type="button" onclick="enableEditMode()">Edit profile</button>
                     </div>
                 </div>
 
-                <div class="profile-row">
-                    <label>School</label>
-                    <input type="text" id="school">
+                <div class="profile-info">
+
+                    <div class="profile-row">
+                        <label>Profile picture URL</label>
+                        <input type="text" id="profilePicture" disabled>
+                    </div>
+
+                    <div class="profile-row">
+                        <label>Email</label>
+                        <input type="email" id="email" disabled>
+                    </div>
+
+                    <div class="profile-row">
+                        <label>Username</label>
+                        <input type="text" id="username" disabled>
+                    </div>
+
+                    <div class="profile-row">
+                        <label>School</label>
+                        <input type="text" id="school" disabled>
+                    </div>
+
+                    <button class="save-profile" id="saveProfileBtn" onclick="saveProfile()" style="display:none;">
+                        Save changes
+                    </button>
                 </div>
 
-                <button class="save-profile" onclick="saveProfile()">
-                    Save changes
-                </button>
+                <hr class="divider">
+
+                <div class="profile-info">
+                    <h3>Password change</h3>
+
+                    <div class="profile-row">
+                        <label>Current password</label>
+                        <div class="password-box">
+                            <input type="password" id="currentPassword">
+                            <button type="button" onclick="togglePassword('currentPassword')">👁️</button>
+                        </div>
+                    </div>
+
+                    <div class="profile-row">
+                        <label>New password</label>
+                        <div class="password-box">
+                            <input type="password" id="newPassword">
+                            <button type="button" onclick="togglePassword('newPassword')">👁️</button>
+                        </div>
+                    </div>
+
+                    <div class="profile-row">
+                        <label>Confirm new password</label>
+                        <div class="password-box">
+                            <input type="password" id="newPasswordConfirm">
+                            <button type="button" onclick="togglePassword('newPasswordConfirm')">👁️</button>
+                        </div>
+                    </div>
+
+                    <button class="save-profile" onclick="savePassword()">
+                        Change password
+                    </button>
+                </div>
+
+
+                <!-- USER POSTS -->
+                <div class="profile-posts">
+                    <h2>Your posts</h2>
+                    <div id="userPosts"></div>
+                </div>
 
             </div>
         </div>
-
-
-        <!-- USER POSTS -->
-        <div class="profile-posts">
-            <h2>Your posts</h2>
-            <div id="userPosts"></div>
-        </div>
-
     </div>
-</div>
 
+    <!-- PROFILE POST MODAL -->
+    <div class="modal" id="profilePostModal" onclick="closeProfilePostModal(event)">
+        <div class="modal-content">
+            <h2 id="profileModalTitle"></h2>
+            <p id="profileModalAuthor"></p>
+            <p id="profileModalDesc"></p>
+            <hr>
+            <div id="profileModalComments"></div>
 
+            <div class="comment-box" id="profileCommentBox">
+                <textarea id="profileNewCommentText" placeholder="Írj kommentet..."></textarea>
+                <button onclick="submitProfileComment()">Küldés</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT POST MODAL -->
+    <div class="modal" id="editPostModal" onclick="closeEditPostModal(event)">
+        <div class="modal-content create-modal">
+            <h2>Poszt szerkesztése</h2>
+
+            <input type="text" id="editPostTitle" placeholder="Cím" />
+            <textarea id="editPostDescription" placeholder="Leírás"></textarea>
+
+            <div class="form-actions">
+                <button type="button" onclick="closeEditPostModal()">Vissza</button>
+                <button type="button" onclick="saveEditedPost()">Mentés</button>
+            </div>
+
+            <p class="error" id="editPostError"></p>
+        </div>
+    </div>
 
     <script src="./js/profil.js"></script>
 </body>

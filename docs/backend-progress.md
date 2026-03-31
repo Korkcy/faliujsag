@@ -204,3 +204,41 @@ Megjegyzés: A tényleges regisztrációs és autentikációs logika az authCont
 - Hibás bejelentkezés esetén a backend hibaüzenete megjelenik a felületen.
 - Az oldalon, a bejelentkezett felhasználók, mostantól képesek posztot létrehozni.
 - Az oldalon lehetőség lesz majd a posztok/feltett kérdések hasznosságának értékelésére, ezt a felhasználók egy 10-es skálán tehetik majd meg
+
+## 2026-03-31 Profiloldal és publikus user profil backend
+
+A mai munka során a backend több olyan endpointtal és javítással bővült, amelyek a profiloldal és a más felhasználók profiljának megjelenítését támogatják.
+
+### Új / használt backend funkciók
+
+- A meglévő `getPost` endpoint aktívan használva lett a frontend modálos posztnyitásához.
+  - Egy adott poszt teljes adatainak lekérésére szolgál
+  - A frontend ezt használja, amikor a felhasználó egy posztot megnyit
+
+- A `getMyPosts` endpoint használatba került a saját profiloldalon.
+  - A bejelentkezett felhasználó saját posztjait adja vissza
+  - Ezek a profil oldalon külön listában jelennek meg
+
+- Új endpoint készült más felhasználó posztjainak lekérésére:
+  - `GET /api/v1/posts/user/:id`
+  - Ez egy adott felhasználó összes posztját adja vissza
+  - A publikus user profil oldal ezt használja
+
+- Új endpoint készült más felhasználó adatainak lekérésére:
+  - `GET /api/v1/users/:id`
+  - Ez lehetővé teszi, hogy a frontend más felhasználó profiladatait is megjelenítse
+### Backend és frontend együttműködés
+
+- A backend `DELETE` kérés után `204 No Content` választ ad vissza
+- Ez frontend oldalon JSON parse hibát okozott
+- Ennek kezeléséhez a frontend API helper logikája igazodott a backend válaszához
+- Így a törlés működik, és nem dob hibát a válasz feldolgozása közben
+
+### Jelenlegi állapot
+
+A backend jelenleg támogatja:
+- saját profil betöltését
+- saját posztok lekérését
+- más felhasználó profiljának megjelenítését
+- más felhasználó posztjainak lekérését
+- posztok modálos megnyitását külön lekérdezéssel

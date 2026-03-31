@@ -4,6 +4,7 @@ const postRouter = require('./routes/postRoutes');
 const authRouter = require('./routes/authRoutes');
 const answerCrudRouter = require('./routes/answerCrudRoutes');
 const globalErrorHandler = require('./middlewares/errorMiddleware');
+const userRouter = require("./routes/userRoutes");
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use((req,res,next)=>{
 app.use('/api/v1/posts', postRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/answers', answerCrudRouter);
+app.use("/api/v1/users", userRouter);
 
 app.use(globalErrorHandler);
 

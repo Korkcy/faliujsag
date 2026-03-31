@@ -13,6 +13,9 @@ router
   .get(postController.getAllPosts)
   .post(protect, postController.createPost);
 
+router.get("/me", protect, postController.getMyPosts);
+router.get("/user/:id", postController.getPostsByUserId);
+
 router
   .route("/:id")
   .get(postController.getPost)

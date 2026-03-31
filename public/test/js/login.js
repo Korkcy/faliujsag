@@ -41,10 +41,16 @@ async function apiRequest(endpoint, method = "GET", data = null) {
   }
 
   const response = await fetch(`${API_BASE}${endpoint}`, options);
-  const result = await response.json();
+
+  let result = null;
+  const contentType = response.headers.get("content-type");
+
+  if (contentType && contentType.includes("application/json")) {
+    result = await response.json();
+  }
 
   if (!response.ok) {
-    throw new Error(result.message || "Hiba történt a bejelentkezés során.");
+    throw new Error(result?.message || "Hiba történt.");
   }
 
   return result;

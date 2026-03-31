@@ -463,6 +463,53 @@ html.dark .filters button:hover {
   color: var(--text);
 }
 
+.profile-header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.profile-header-actions button {
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: var(--bg);
+  color: var(--text);
+  transition: 0.2s;
+}
+
+.profile-header-actions button:hover {
+  transform: scale(1.05);
+}
+
+.profile-row input:disabled {
+  opacity: 0.75;
+  cursor: default;
+}
+
+.clickable-post {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.clickable-post:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+#profileModalComments h4 {
+  margin-bottom: 14px;
+}
+
+#profileModalComments .answer-item {
+  margin-bottom: 12px;
+}
+
+#profilePostModal .modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
 .profile-info {
   display: flex;
   flex-direction: column;
@@ -814,4 +861,31 @@ html.dark .pagination button:hover {
 
 .profile-menu {
   margin-right: 20px;
+}
+
+#editPostModal .modal-content {
+  max-width: 620px;
+}
+
+#editPostError {
+  color: #e74c3c;
+  font-size: 13px;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.post-meta a,
+.answer-item a,
+#modal-author a,
+#userModalAuthor a {
+  color: inherit;
+  text-decoration: none;
+  font-weight: inherit;
+}
+
+.post-meta a:hover,
+.answer-item a:hover,
+#modal-author a:hover,
+#userModalAuthor a:hover {
+  text-decoration: underline;
 }
