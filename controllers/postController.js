@@ -1,6 +1,27 @@
 const Post = require("../models/postModel");
 const AppError = require("../utils/appError");
 
+const calcRatingStats = (post) => {
+  if (!post.ratings || post.ratings.length == 0) {
+    post.ratingsAverage = null;
+    post.ratingsQuantity = 0;
+    post.helpfulCount = 0;
+    return;
+  }
+
+  const ratingsQuantity = post.ratings.length;
+
+  const ratingsSum = post.ratings.reduce((sum, rating) => {
+    return sum + rating.score;
+  }, 0);
+
+  const helpfulCount = post.ratings.filter((rating) => rating.helpful).length;
+
+  post.ratingsQuantity = ratingsQuantity;
+  post.ratingsAverage = Math.round((ratingsSum / ratingsQuantity) * 10) / 10;
+  post.helpfulCount = helpfulCount;
+};
+
 exports.getAllPosts = async (req, res, next) => {
   try {
     let query = {};
@@ -173,6 +194,60 @@ exports.deletePost = async (req, res, next) => {
     res.status(204).json({
       status: "success",
       data: null,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.ratePost = async (req, res, next) => {
+  try {
+    const {helpful, score} = req.body;
+
+    if (typeof helpful !== "boolean") {
+      return next(new AppError("A helpful mező kötelező és true/false értékű kell legyen", 400));
+    }
+
+    if (!score || score < 1 || score > 10) {
+      return next(new AppError("A score mező kötelező és 1-10 közötti szám kell legyen", 400));
+    }
+
+    const post = await Post.findById(req.params.id);
+
+    if (!post) {
+      return next(new AppError("Nincs ilyen poszt", 404));
+    }
+
+    if (post.author.toString() === req.user._id.toString()) {
+      return next(new AppError("A saját posztodat nem értékelheted", 403));
+    }
+
+    const existingRating = post.ratings.find(
+      (rating) => rating.user.toString() === req.user._id.toString()
+    );
+
+    if (existingRating) {
+      existingRating.helpful = helpful;
+      existingRating.score = score;
+    } else {
+      post.ratings.push({
+        user: req.user._id,
+        helpful,
+        score
+      });
+    }
+
+    calcRatingStats(post);
+    await post.save();
+
+    res.status(200).json({
+      status: "success",
+      message: existingRating
+        ? "Értékelés sikeresen frissítve"
+        : "Értékelés sikeresen létrehozva",
+      data: {
+        post
+      }
     });
   } catch (err) {
     next(err);

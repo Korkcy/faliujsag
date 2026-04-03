@@ -16,6 +16,8 @@ router
 router.get("/me", protect, postController.getMyPosts);
 router.get("/user/:id", postController.getPostsByUserId);
 
+router.post("/:id/rate", protect, postController.ratePost);
+
 router
   .route("/:id")
   .get(postController.getPost)
