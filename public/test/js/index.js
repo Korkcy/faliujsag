@@ -530,6 +530,11 @@ function ratePost(isHelpful) {
 async function submitRating() {
   const score = parseInt(document.getElementById("ratingScore").value);
 
+  if (selectedHelpful === null) {
+    alert("Jelöld meg, hogy hasznos volt-e a poszt!");
+    return;
+  }
+
   if (!score || score < 1 || score > 10) {
     alert("Adj meg egy számot 1 és 10 között!");
     return;

@@ -1,5 +1,25 @@
 const mongoose = require('mongoose');
 
+const ratingSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: [true, 'Az értékeléshez kell felhasználó']
+    },
+    helpful: {
+        type: Boolean,
+        required: [true, 'Meg kell adni, hogy hasznos volt-e']
+    },
+    score: {
+        type: Number,
+        required: [true, 'Az értékelés pontszáma kötelező'],
+        min: [1, 'Az értékelés nem lehet kisebb, mint 1'],
+        max: [10, 'Az értékelés nem lehett nagyobb, mint 10']
+    }
+},
+{_id: false}
+);
+
 const postSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -24,6 +44,7 @@ const postSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    ratings:[ratingSchema],
     answersCount: {
         type: Number,
         default: 0
