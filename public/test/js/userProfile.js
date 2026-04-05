@@ -117,6 +117,7 @@ function getAuthorName(post) {
 }
 
 let viewedUserPosts = [];
+let currentViewedPostId = null;
 
 async function loadViewedUserProfile() {
   const userId = getUserIdFromUrl();
@@ -195,6 +196,12 @@ function renderUserAnswers(container, answers, level = 0) {
         • ${new Date(answer.createdAt).toLocaleDateString("hu-HU")}
       </p>
       <p>${answer.text}</p>
+
+      <div class="comment-actions">
+        <button onclick="showUserReplyBox('${answer._id}')">Válasz</button>
+      </div>
+
+      <div id="user-reply-${answer._id}"></div>
     `;
 
     container.appendChild(wrapper);
@@ -207,6 +214,8 @@ function renderUserAnswers(container, answers, level = 0) {
 
 async function openViewedUserPost(postId) {
   try {
+    currentViewedPostId = postId;
+
     const postRes = await apiRequest(`/posts/${postId}`, "GET");
     const post = postRes.data.post;
 
@@ -233,6 +242,8 @@ async function openViewedUserPost(postId) {
       renderUserAnswers(commentsContainer, answers, 0);
     }
 
+    updateUserCommentUI();
+
     document.getElementById("userPostModal").style.display = "flex";
   } catch (err) {
     console.error(err);
@@ -246,8 +257,87 @@ function closeUserPostModal(event) {
   }
 }
 
+function updateUserCommentUI() {
+  const token = localStorage.getItem("token");
+  const box = document.getElementById("userCommentBox");
+
+  if (!box) return;
+
+  if (!token) {
+    box.innerHTML = "<p>Kommenteléshez jelentkezz be.</p>";
+  } else {
+    box.innerHTML = `
+      <textarea id="userNewCommentText" placeholder="Írj kommentet..."></textarea>
+      <button onclick="submitUserComment()">Küldés</button>
+    `;
+  }
+}
+
+async function submitUserComment() {
+  const text = document.getElementById("userNewCommentText")?.value.trim();
+
+  if (!text) return;
+
+  if (!localStorage.getItem("token")) {
+    alert("Kommenteléshez jelentkezz be!");
+    return;
+  }
+
+  try {
+    await apiRequest(`/posts/${currentViewedPostId}/answers`, "POST", {
+      text
+    });
+
+    document.getElementById("userNewCommentText").value = "";
+    await openViewedUserPost(currentViewedPostId);
+  } catch (err) {
+    alert(err.message || "Nem sikerült elküldeni a kommentet.");
+  }
+}
+
+function showUserReplyBox(answerId) {
+  if (!localStorage.getItem("token")) {
+    alert("Válaszoláshoz jelentkezz be!");
+    return;
+  }
+
+  const container = document.getElementById(`user-reply-${answerId}`);
+
+  container.innerHTML = `
+    <div class="comment-box">
+      <textarea id="userReplyText-${answerId}" placeholder="Válasz..."></textarea>
+      <button onclick="submitUserReply('${answerId}')">Küldés</button>
+    </div>
+  `;
+}
+
+async function submitUserReply(parentId) {
+  const text = document.getElementById(`userReplyText-${parentId}`)?.value.trim();
+
+  if (!text) return;
+
+  if (!localStorage.getItem("token")) {
+    alert("Válaszoláshoz jelentkezz be!");
+    return;
+  }
+
+  try {
+    await apiRequest(`/posts/${currentViewedPostId}/answers`, "POST", {
+      text,
+      replyTo: parentId
+    });
+
+    await openViewedUserPost(currentViewedPostId);
+  } catch (err) {
+    alert(err.message || "Nem sikerült elküldeni a választ.");
+  }
+}
+
 function goToUserProfile(userId, event) {
-  if (event) event.preventDefault();
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
 
   const currentUser = getCurrentUser();
 
