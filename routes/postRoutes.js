@@ -17,6 +17,7 @@ router.get("/me", protect, postController.getMyPosts);
 router.get("/user/:id", postController.getPostsByUserId);
 
 router.post("/:id/rate", protect, postController.ratePost);
+router.get("/:id/my-rating", protect, postController.getMyRatingForPost);
 
 router
   .route("/:id")

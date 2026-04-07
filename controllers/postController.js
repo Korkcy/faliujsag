@@ -191,10 +191,7 @@ exports.deletePost = async (req, res, next) => {
   try {
     await req.post.deleteOne();
 
-    res.status(204).json({
-      status: "success",
-      data: null,
-    });
+    res.status(204).send();
   } catch (err) {
     next(err);
   }
@@ -253,3 +250,26 @@ exports.ratePost = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.getMyRatingForPost = async (req, res, next) => {
+  try {
+    const post = await Post.findById(req.params.id);
+
+    if(!post){
+      return next(new AppError("Nincs ilyen poszt", 404));
+    }
+
+    const myRating = post.ratings.find(
+      (rating) => rating.user.toString() === req.user._id.toString()
+    );
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        rating: myRating || null
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}

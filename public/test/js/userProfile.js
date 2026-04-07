@@ -117,6 +117,7 @@ function getAuthorName(post) {
 }
 
 let viewedUserPosts = [];
+let selectedViewedHelpful = null;
 let currentViewedPostId = null;
 
 async function loadViewedUserProfile() {
@@ -170,21 +171,26 @@ async function loadViewedUserProfile() {
 }
 
 function renderUserAnswers(container, answers, level = 0) {
+  const currentUser = getCurrentUser();
+  const currentUserId = currentUser?._id || currentUser?.id;
+
   answers.forEach((answer) => {
     const authorName =
       answer.author && typeof answer.author === "object"
         ? answer.author.username
         : "Ismeretlen felhasználó";
 
-    const wrapper = document.createElement("div");
-    wrapper.className = "answer-item";
-    wrapper.style.marginLeft = `${level * 20}px`;
-    wrapper.style.marginTop = "12px";
-
     const authorId =
       answer.author && typeof answer.author === "object"
         ? answer.author._id
         : null;
+
+    const isOwnAnswer = currentUserId && authorId === currentUserId;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "answer-item";
+    wrapper.style.marginLeft = `${level * 20}px`;
+    wrapper.style.marginTop = "12px";
 
     wrapper.innerHTML = `
       <p>
@@ -199,8 +205,17 @@ function renderUserAnswers(container, answers, level = 0) {
 
       <div class="comment-actions">
         <button onclick="showUserReplyBox('${answer._id}')">Válasz</button>
+        ${
+          isOwnAnswer
+            ? `
+              <button onclick="showUserEditAnswerBox('${answer._id}', event)">Szerkesztés</button>
+              <button onclick="deleteUserAnswer('${answer._id}', event)">Törlés</button>
+            `
+            : ""
+        }
       </div>
 
+      <div id="user-edit-answer-${answer._id}"></div>
       <div id="user-reply-${answer._id}"></div>
     `;
 
@@ -245,6 +260,7 @@ async function openViewedUserPost(postId) {
     updateUserCommentUI();
 
     document.getElementById("userPostModal").style.display = "flex";
+    await loadViewedPostRating(postId);
   } catch (err) {
     console.error(err);
     alert("Nem sikerült megnyitni a posztot.");
@@ -330,6 +346,157 @@ async function submitUserReply(parentId) {
     await openViewedUserPost(currentViewedPostId);
   } catch (err) {
     alert(err.message || "Nem sikerült elküldeni a választ.");
+  }
+}
+
+function showUserEditAnswerBox(answerId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  const container = document.getElementById(`user-edit-answer-${answerId}`);
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="comment-box">
+      <textarea id="userEditAnswerText-${answerId}" placeholder="Szerkesztett válasz..."></textarea>
+      <button onclick="saveUserEditedAnswer('${answerId}')">Mentés</button>
+      <button onclick="cancelUserEditAnswer('${answerId}')">Mégse</button>
+    </div>
+  `;
+}
+
+function cancelUserEditAnswer(answerId) {
+  const container = document.getElementById(`user-edit-answer-${answerId}`);
+  if (container) container.innerHTML = "";
+}
+
+async function saveUserEditedAnswer(answerId) {
+  const text = document.getElementById(`userEditAnswerText-${answerId}`)?.value.trim();
+
+  if (!text) {
+    alert("A válasz nem lehet üres.");
+    return;
+  }
+
+  try {
+    await apiRequest(`/answers/${answerId}`, "PATCH", { text });
+    await openViewedUserPost(currentViewedPostId);
+  } catch (err) {
+    alert(err.message || "Nem sikerült módosítani a kommentet.");
+  }
+}
+
+async function deleteUserAnswer(answerId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  const confirmed = confirm("Biztosan törölni szeretnéd ezt a kommentet?");
+  if (!confirmed) return;
+
+  try {
+    await apiRequest(`/answers/${answerId}`, "DELETE");
+    await openViewedUserPost(currentViewedPostId);
+  } catch (err) {
+    alert(err.message || "Nem sikerült törölni a kommentet.");
+  }
+}
+
+function updateViewedHelpfulButtons() {
+  const yesBtn = document.getElementById("userHelpfulYesBtn");
+  const noBtn = document.getElementById("userHelpfulNoBtn");
+
+  if (!yesBtn || !noBtn) return;
+
+  yesBtn.classList.toggle("active-rating", selectedViewedHelpful === true);
+  noBtn.classList.toggle("active-rating", selectedViewedHelpful === false);
+}
+
+function resetViewedRatingUI() {
+  selectedViewedHelpful = null;
+
+  const scoreInput = document.getElementById("userRatingScore");
+  const messageEl = document.getElementById("userRatingMessage");
+
+  if (scoreInput) scoreInput.value = "";
+  if (messageEl) messageEl.textContent = "";
+
+  updateViewedHelpfulButtons();
+}
+
+function rateViewedPost(isHelpful) {
+  selectedViewedHelpful = isHelpful;
+
+  const messageEl = document.getElementById("userRatingMessage");
+  if (messageEl) {
+    messageEl.textContent =
+      isHelpful ? "👍 Hasznosnak jelölted" : "👎 Nem hasznosnak jelölted";
+  }
+
+  updateViewedHelpfulButtons();
+}
+
+async function loadViewedPostRating(postId) {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    resetViewedRatingUI();
+    return;
+  }
+
+  try {
+    const response = await apiRequest(`/posts/${postId}/my-rating`, "GET");
+    const rating = response.data.rating;
+
+    if (!rating) {
+      resetViewedRatingUI();
+      return;
+    }
+
+    selectedViewedHelpful = rating.helpful;
+
+    const scoreInput = document.getElementById("userRatingScore");
+    const messageEl = document.getElementById("userRatingMessage");
+
+    if (scoreInput) scoreInput.value = rating.score;
+    if (messageEl) messageEl.textContent = "Köszönjük az értékelést!";
+
+    updateViewedHelpfulButtons();
+  } catch (err) {
+    console.error("Nem sikerült betölteni a ratinget:", err.message);
+    resetViewedRatingUI();
+  }
+}
+
+async function submitViewedPostRating() {
+  const score = parseInt(document.getElementById("userRatingScore")?.value, 10);
+
+  if (selectedViewedHelpful === null) {
+    alert("Jelöld meg, hogy hasznos volt-e a poszt!");
+    return;
+  }
+
+  if (!score || score < 1 || score > 10) {
+    alert("Adj meg egy számot 1 és 10 között!");
+    return;
+  }
+
+  try {
+    await apiRequest(`/posts/${currentViewedPostId}/rate`, "POST", {
+      helpful: selectedViewedHelpful,
+      score
+    });
+
+    document.getElementById("userRatingMessage").textContent =
+      "Köszönjük az értékelést!";
+
+    await loadViewedPostRating(currentViewedPostId);
+  } catch (err) {
+    document.getElementById("userRatingMessage").textContent =
+      err.message || "Nem sikerült elküldeni az értékelést.";
   }
 }
 
