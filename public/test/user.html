@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
     <link rel="stylesheet" href="style.css">
     <title>Felhasználó profilja</title>
 </head>
+
 <body>
     <canvas id="stars"></canvas>
 
@@ -74,9 +76,26 @@
             <textarea id="userNewCommentText" placeholder="Írj kommentet..."></textarea>
             <button onclick="submitUserComment()">Küldés</button>
         </div>
+
+        <div class="rating-box">
+            <p>Hasznos volt ez a poszt?</p>
+
+            <div class="rating-actions">
+                <button id="userHelpfulYesBtn" onclick="rateViewedPost(true)">👍 Igen</button>
+                <button id="userHelpfulNoBtn" onclick="rateViewedPost(false)">👎 Nem</button>
+            </div>
+
+            <div class="rating-number">
+                <input type="number" id="userRatingScore" min="1" max="10" placeholder="1-10">
+                <button onclick="submitViewedPostRating()">Értékelés</button>
+            </div>
+
+            <p id="userRatingMessage"></p>
+        </div>
     </div>
 </div>
 
     <script src="./js/userProfile.js"></script>
 </body>
+
 </html>

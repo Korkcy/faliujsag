@@ -148,10 +148,7 @@ exports.deleteAnswer = async (req, res, next) => {
 
     await Post.findByIdAndUpdate(answer.post, {$inc: {answersCount: -1} })
 
-    res.status(204).json({
-      status: "success",
-      data: null,
-    });
+    res.status(204).send();
   } catch (err) {
     next(err);
   }

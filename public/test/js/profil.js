@@ -5,7 +5,7 @@ async function apiRequest(endpoint, method = "GET", data = null) {
 
   const options = {
     method,
-    headers: {}
+    headers: {},
   };
 
   if (data) {
@@ -33,6 +33,17 @@ async function apiRequest(endpoint, method = "GET", data = null) {
   return result;
 }
 
+function getCurrentUser() {
+  const rawUser = localStorage.getItem("user");
+  if (!rawUser) return null;
+
+  try {
+    return JSON.parse(rawUser);
+  } catch {
+    return null;
+  }
+}
+
 // ====================== COMMON FUNCTIONS ======================
 function toggleTheme() {
   const isDark = document.documentElement.classList.toggle("dark");
@@ -51,7 +62,8 @@ function updateIcon() {
 function toggleDropdown() {
   const dropdown = document.getElementById("dropdown");
   if (dropdown) {
-    dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+    dropdown.style.display =
+      dropdown.style.display === "block" ? "none" : "block";
   }
 }
 
@@ -145,7 +157,7 @@ async function saveProfile() {
       email,
       username,
       school,
-      profilePicture
+      profilePicture,
     });
 
     const updatedUser = res.data.user;
@@ -171,7 +183,8 @@ async function saveProfile() {
 async function savePassword() {
   const currentPassword = document.getElementById("currentPassword").value;
   const newPassword = document.getElementById("newPassword").value;
-  const newPasswordConfirm = document.getElementById("newPasswordConfirm").value;
+  const newPasswordConfirm =
+    document.getElementById("newPasswordConfirm").value;
 
   if (!currentPassword || !newPassword || !newPasswordConfirm) {
     alert("Tölts ki minden jelszó mezőt!");
@@ -182,7 +195,7 @@ async function savePassword() {
     await apiRequest("/users/updateMyPassword", "PATCH", {
       currentPassword,
       newPassword,
-      newPasswordConfirm
+      newPasswordConfirm,
     });
 
     document.getElementById("currentPassword").value = "";
@@ -248,12 +261,41 @@ function getAuthorName(post) {
   return "Ismeretlen felhasználó";
 }
 
+function goToUserProfile(userId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  const currentUser = getCurrentUser();
+
+  if (
+    currentUser &&
+    (currentUser.id === userId || currentUser._id === userId)
+  ) {
+    window.location.href = "profile.html";
+    return;
+  }
+
+  window.location.href = `user.html?id=${userId}`;
+}
+
 function renderProfileAnswers(container, answers, level = 0) {
+  const currentUser = getCurrentUser();
+
   answers.forEach((answer) => {
     const authorName =
       answer.author && typeof answer.author === "object"
         ? answer.author.username
         : "Ismeretlen felhasználó";
+
+    const authorId =
+      answer.author && typeof answer.author === "object"
+        ? answer.author._id
+        : null;
+
+    const currentUserId = currentUser?._id || currentUser?.id;
+    const isOwnAnswer = currentUserId && authorId === currentUserId;
 
     const wrapper = document.createElement("div");
     wrapper.className = "answer-item";
@@ -261,13 +303,30 @@ function renderProfileAnswers(container, answers, level = 0) {
     wrapper.style.marginTop = "12px";
 
     wrapper.innerHTML = `
-      <p><strong>${authorName}</strong> • ${new Date(answer.createdAt).toLocaleDateString("hu-HU")}</p>
+      <p>
+        <strong>
+          ${
+            authorId
+              ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${authorName}</a>`
+              : authorName
+          }
+        </strong>
+        • ${new Date(answer.createdAt).toLocaleDateString("hu-HU")}
+      </p>
       <p>${answer.text}</p>
 
       <div class="comment-actions">
         <button onclick="showProfileReplyBox('${answer._id}')">Válasz</button>
+        ${isOwnAnswer
+        ? `
+              <button onclick="showProfileEditAnswerBox('${answer._id}', event)">Szerkesztés</button>
+              <button onclick="deleteProfileAnswer('${answer._id}', event)">Törlés</button>
+            `
+        : ""
+      }
       </div>
 
+      <div id="profile-edit-answer-${answer._id}"></div>
       <div id="profile-reply-${answer._id}"></div>
     `;
 
@@ -296,7 +355,9 @@ function showProfileReplyBox(answerId) {
 }
 
 async function submitProfileReply(parentId) {
-  const text = document.getElementById(`profileReplyText-${parentId}`).value.trim();
+  const text = document
+    .getElementById(`profileReplyText-${parentId}`)
+    .value.trim();
 
   if (!text) return;
 
@@ -308,12 +369,70 @@ async function submitProfileReply(parentId) {
   try {
     await apiRequest(`/posts/${currentProfilePostId}/answers`, "POST", {
       text,
-      replyTo: parentId
+      replyTo: parentId,
     });
 
     await openMyPost(currentProfilePostId);
   } catch (err) {
     alert(err.message || "Nem sikerült elküldeni a választ.");
+  }
+}
+
+function showProfileEditAnswerBox(answerId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  const container = document.getElementById(`profile-edit-answer-${answerId}`);
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="comment-box">
+      <textarea id="profileEditAnswerText-${answerId}" placeholder="Szerkesztett válasz..."></textarea>
+      <button onclick="saveProfileEditedAnswer('${answerId}')">Mentés</button>
+      <button onclick="cancelProfileEditAnswer('${answerId}')">Mégse</button>
+    </div>
+  `;
+}
+
+function cancelProfileEditAnswer(answerId) {
+  const container = document.getElementById(`profile-edit-answer-${answerId}`);
+  if (container) container.innerHTML = "";
+}
+
+async function saveProfileEditedAnswer(answerId) {
+  const text = document
+    .getElementById(`profileEditAnswerText-${answerId}`)
+    ?.value.trim();
+
+  if (!text) {
+    alert("A válasz nem lehet üres.");
+    return;
+  }
+
+  try {
+    await apiRequest(`/answers/${answerId}`, "PATCH", { text });
+    await openMyPost(currentProfilePostId);
+  } catch (err) {
+    alert(err.message || "Nem sikerült módosítani a kommentet.");
+  }
+}
+
+async function deleteProfileAnswer(answerId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  const confirmed = confirm("Biztosan törölni szeretnéd ezt a kommentet?");
+  if (!confirmed) return;
+
+  try {
+    await apiRequest(`/answers/${answerId}`, "DELETE");
+    await openMyPost(currentProfilePostId);
+  } catch (err) {
+    alert(err.message || "Nem sikerült törölni a kommentet.");
   }
 }
 
@@ -344,7 +463,8 @@ async function openMyPost(postId) {
     commentsContainer.innerHTML = "<h4>Comments:</h4>";
 
     if (answers.length === 0) {
-      commentsContainer.innerHTML += "<p>Még nincsenek válaszok ehhez a poszthoz.</p>";
+      commentsContainer.innerHTML +=
+        "<p>Még nincsenek válaszok ehhez a poszthoz.</p>";
     } else {
       renderProfileAnswers(commentsContainer, answers, 0);
     }
@@ -386,7 +506,7 @@ async function submitProfileComment() {
 
   try {
     await apiRequest(`/posts/${currentProfilePostId}/answers`, "POST", {
-      text
+      text,
     });
 
     document.getElementById("profileNewCommentText").value = "";
@@ -436,7 +556,9 @@ function closeEditPostModal(event) {
 
 async function saveEditedPost() {
   const title = document.getElementById("editPostTitle").value.trim();
-  const description = document.getElementById("editPostDescription").value.trim();
+  const description = document
+    .getElementById("editPostDescription")
+    .value.trim();
   const errorEl = document.getElementById("editPostError");
 
   if (!title || !description) {
@@ -447,7 +569,7 @@ async function saveEditedPost() {
   try {
     await apiRequest(`/posts/${currentEditingPostId}`, "PATCH", {
       title,
-      description
+      description,
     });
 
     closeEditPostModal();
@@ -481,7 +603,7 @@ if (canvas) {
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         size: Math.random() * 1.5,
-        speed: Math.random() * 0.3 + 0.1
+        speed: Math.random() * 0.3 + 0.1,
       });
     }
   }
@@ -493,9 +615,7 @@ if (canvas) {
 
     stars.forEach((s) => {
       ctx.beginPath();
-      ctx.fillStyle = isDark
-        ? "rgba(255,255,255,0.6)"
-        : "rgb(74, 144, 226)";
+      ctx.fillStyle = isDark ? "rgba(255,255,255,0.6)" : "rgb(74, 144, 226)";
       ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
       ctx.fill();
 

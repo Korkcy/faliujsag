@@ -64,6 +64,11 @@ function getCurrentUser() {
   }
 }
 
+function getCurrentUserId() {
+  const currentUser = getCurrentUser();
+  return currentUser?._id || currentUser?.id || null;
+}
+
 function goToUserProfile(userId, event) {
   if (event) {
     event.preventDefault();
@@ -216,9 +221,12 @@ async function openModal(postOrId) {
 
   document.getElementById("modal").style.display = "flex";
   updateCommentUI();
+  await loadMyRating(post._id);
 }
 
 function renderAnswers(container, answers, level = 0) {
+  const currentUserId = getCurrentUserId();
+
   answers.forEach((answer) => {
     const authorName =
       answer.author && typeof answer.author === "object"
@@ -229,29 +237,42 @@ function renderAnswers(container, answers, level = 0) {
       answer.author && typeof answer.author === "object"
         ? answer.author._id
         : null;
+
+    const isOwnAnswer = currentUserId && authorId === currentUserId;
+
     const wrapper = document.createElement("div");
     wrapper.className = "answer-item";
     wrapper.style.marginLeft = `${level * 20}px`;
     wrapper.style.marginTop = "12px";
 
     wrapper.innerHTML = `
-  <p>
-    <strong>
-      ${authorId
+      <p>
+        <strong>
+          ${authorId
         ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${authorName}</a>`
         : authorName
       }
-    </strong>
-    • ${formatDate(answer.createdAt)}
-  </p>
-  <p>${answer.text}</p>
+        </strong>
+        • ${formatDate(answer.createdAt)}
+      </p>
 
-  <div class="comment-actions">
-    <button onclick="showReplyBox('${answer._id}')">Válasz</button>
-  </div>
+      <p id="answer-text-${answer._id}">${answer.text}</p>
 
-  <div id="reply-${answer._id}"></div>
-`;
+      <div class="comment-actions">
+        <button onclick="showReplyBox('${answer._id}')">Válasz</button>
+        ${
+          isOwnAnswer
+            ? `
+            <button onclick="showEditAnswerBox('${answer._id}', event)">Szerkesztés</button>
+            <button onclick="deleteAnswer('${answer._id}', event)">Törlés</button>
+            `
+            : ""
+          }
+      </div>
+
+      <div id="edit-answer-${answer._id}"></div>
+      <div id="reply-${answer._id}"></div>
+    `;
 
     container.appendChild(wrapper);
 
@@ -415,6 +436,35 @@ function showReplyBox(answerId) {
   `;
 }
 
+function showEditAnswerBox(answerId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  const textEl = document.getElementById(`answer-text-${answerId}`);
+  const editContainer = document.getElementById(`edit-answer-${answerId}`);
+
+  if (!textEl || !editContainer) return;
+
+  const currentText = textEl.textContent.trim();
+
+  editContainer.innerHTML = `
+    <div class="comment-box">
+      <textarea id="editAnswerText-${answerId}">${currentText}</textarea>
+      <button onclick="saveEditedAnswer('${answerId}')">Mentés</button>
+      <button onclick="cancelEditAnswer('${answerId}')">Mégse</button>
+    </div>
+  `;
+}
+
+function cancelEditAnswer(answerId) {
+  const editContainer = document.getElementById(`edit-answer-${answerId}`);
+  if (editContainer) {
+    editContainer.innerHTML = "";
+  }
+}
+
 //reply kuldes
 async function submitReply(parentId) {
   const text = document.getElementById(`replyText-${parentId}`).value.trim();
@@ -431,6 +481,39 @@ async function submitReply(parentId) {
   });
 
   openModal(currentPostId);
+}
+
+async function deleteAnswer(answerId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  const confirmed = confirm("Biztosan törölni szeretnéd ezt a kommentet?");
+  if (!confirmed) return;
+
+  try {
+    await apiRequest(`/answers/${answerId}`, "DELETE");
+    await openModal(currentPostId);
+  } catch (err) {
+    alert(err.message || "Nem sikerült törölni a kommentet.");
+  }
+}
+
+async function saveEditedAnswer(answerId) {
+  const text = document.getElementById(`editAnswerText-${answerId}`)?.value.trim();
+
+  if (!text) {
+    alert("A komment szövege nem lehet üres.");
+    return;
+  }
+
+  try {
+    await apiRequest(`/answers/${answerId}`, "PATCH", { text });
+    await openModal(currentPostId);
+  } catch (err) {
+    alert(err.message || "Nem sikerült módosítani a kommentet.");
+  }
 }
 
 function updateCommentUI() {
@@ -519,11 +602,57 @@ window.addEventListener("DOMContentLoaded", updateIcon);
 
 let selectedHelpful = null;
 
+function updateHelpfulButtons() {
+  const yesBtn = document.getElementById("helpfulYesBtn");
+  const noBtn = document.getElementById("helpfulNoBtn");
+
+  if (!yesBtn || !noBtn) return;
+
+  yesBtn.classList.toggle("active-rating", selectedHelpful === true);
+  noBtn.classList.toggle("active-rating", selectedHelpful === false);
+}
+
+function resetRatingUI() {
+  selectedHelpful = null;
+  document.getElementById("ratingScore").value = "";
+  document.getElementById("ratingMessage").textContent = "";
+  updateHelpfulButtons();
+}
+
 function ratePost(isHelpful) {
   selectedHelpful = isHelpful;
 
   document.getElementById("ratingMessage").textContent =
     isHelpful ? "👍 Hasznosnak jelölted" : "👎 Nem hasznosnak jelölted";
+
+  updateHelpfulButtons();
+}
+
+async function loadMyRating(postId) {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    resetRatingUI();
+    return;
+  }
+
+  try {
+    const response = await apiRequest(`/posts/${postId}/my-rating`, "GET");
+    const rating = response.data.rating;
+
+    if (!rating) {
+      resetRatingUI();
+      return;
+    }
+
+    selectedHelpful = rating.helpful;
+    document.getElementById("ratingScore").value = rating.score;
+    document.getElementById("ratingMessage").textContent = "Köszönjük az értékelést!";
+    updateHelpfulButtons();
+  } catch (err) {
+    console.error("Nem sikerült betölteni a ratinget:", err.message);
+    resetRatingUI();
+  }
 }
 
 //ertekeles kuldese
@@ -549,7 +678,8 @@ async function submitRating() {
     document.getElementById("ratingMessage").textContent =
       "Köszönjük az értékelést!";
 
-    loadPosts(); // frissíti a listát
+    await loadMyRating(currentPostId);
+    await loadPosts();
   } catch (err) {
     document.getElementById("ratingMessage").textContent = err.message;
   }

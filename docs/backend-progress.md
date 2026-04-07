@@ -242,3 +242,22 @@ A backend jelenleg támogatja:
 - más felhasználó profiljának megjelenítését
 - más felhasználó posztjainak lekérését
 - posztok modálos megnyitását külön lekérdezéssel
+
+## 2026-04-03 Értékelések
+
+- Az oldalon mostmár hasznosság alapján lehet értékelni a posztokat.
+- Először is, hogy a kérdés hasznos volt-e, majd egy 1-től 10-ig terjedő skálán, hogy mennyire volt hasznos a szóban forgó kérdés.
+- Az értékelést az adatbázis elmenti.
+- Több értékelés esetén, átlagos értékelést is számolunk.
+
+## 2026-04-05 Másik profil oldali válasz
+
+- Implementálva lett, a másik felhasználó oldaláról történő válaszolás.
+- Ha a felhasználó egy másik felhasználó profiljáról nyitja meg az általa feltett kérdéseket, akkor mostmár tud ott is válaszolni rá, nem csak a főoldalról.
+
+## 2026-04-07 értékelés állapot elmentés, válasz szerkesztés és törlés
+
+- Ha a felhasználó már értékelt egy posztot, akkor az értékelése, az oldal újratöltése után is látható lesz a számára.
+- Ez fontos, mert így a felhasználó tudni fogja, hogy értékelte már a posztot.
+- Az értékelése átírásával tudja módosítani az értékelését.
+- A felhasználó ezentúl tudja a saját válaszait szerkeszteni és törölni is, nem csak a fő oldalon, hanem mindenhol, ahol elérheti őket (főoldal, saját profil, mások profilja).
