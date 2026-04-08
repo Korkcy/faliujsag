@@ -115,8 +115,25 @@
 
                 <!-- USER POSTS -->
                 <div class="profile-posts">
-                    <h2>Your posts</h2>
-                    <div id="userPosts"></div>
+                    <div class="profile-tabs">
+                        <button type="button" class="profile-tab active" onclick="setProfileView('posts')">
+                            Posztjaim
+                        </button>
+                        <button type="button" class="profile-tab" onclick="setProfileView('comments')">
+                            Kommentjeim
+                        </button>
+                        <button type="button" class="profile-tab" onclick="setProfileView('saved')">
+                            Mentett posztok
+                        </button>
+                    </div>
+
+                    <div id="profileContent"></div>
+
+                    <div class="pagination" id="profilePagination">
+                        <button type="button" id="profilePrevPageBtn">Előző</button>
+                        <span id="profilePageInfo">1 / 1</span>
+                        <button type="button" id="profileNextPageBtn">Következő</button>
+                    </div>
                 </div>
 
             </div>

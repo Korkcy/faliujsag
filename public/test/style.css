@@ -914,3 +914,82 @@ html.dark .pagination button:hover {
   opacity: 1;
   box-shadow: 0 3px 9px rgba(74, 144, 226, 0.3);
 }
+
+.profile-tabs {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  background: var(--bg);
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.profile-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  padding: 18px 12px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s;
+  position: relative;
+}
+
+.profile-tab:not(:last-child) {
+  border-right: 1px solid rgba(255,255,255,0.12);
+}
+
+html:not(.dark) .profile-tab:not(:last-child) {
+  border-right: 1px solid rgba(0,0,0,0.12);
+}
+
+.profile-tab:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+html:not(.dark) .profile-tab:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+.profile-tab.active {
+  font-weight: bold;
+  background: rgba(74, 144, 226, 0.12);
+}
+
+#profileContent {
+  min-height: 120px;
+}
+
+.profile-post-card {
+  background: var(--bg);
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.profile-post-card:hover {
+  transform: translateY(-2px);
+}
+
+.profile-post-card h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.profile-post-card p {
+  margin-bottom: 10px;
+}
+
+.profile-post-card .post-actions {
+  margin-top: 10px;
+}
+
+.profile-empty {
+  opacity: 0.8;
+  padding: 10px 0;
+}

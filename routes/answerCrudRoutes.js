@@ -5,6 +5,8 @@ const { onlyAuthorOrAdminAnswer } = require('../middlewares/answerAuthMiddleware
 
 const router = express.Router();
 
+router.get("/me/posts", protect , answerController.getCommentedPostsByMe);
+
 router
   .route('/:id')
   .patch(protect, onlyAuthorOrAdminAnswer, answerController.updateAnswer)

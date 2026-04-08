@@ -139,7 +139,7 @@ async function loadProfile() {
     const profileImage = document.getElementById("profileImage");
     profileImage.src = user.profilePicture || "https://i.pravatar.cc/120";
 
-    loadUserPosts();
+    await loadProfileContent();
   } catch (err) {
     console.error("Profile load error:", err);
     alert("Nem sikerült betölteni a profilt.");
@@ -210,38 +210,130 @@ async function savePassword() {
 
 // ====================== USER POSTS ======================
 let userPosts = [];
+let commentedPosts = [];
+
 let currentProfilePostId = null;
 let currentEditingPostId = null;
 
-async function loadUserPosts() {
-  const container = document.getElementById("userPosts");
+let currentProfileView = "posts";
+let currentProfilePage = 1;
+let totalProfilePages = 1;
+const PROFILE_ITEMS_PER_PAGE = 5;
+
+function setProfileView(view) {
+  currentProfileView = view;
+  currentProfilePage = 1;
+  updateProfileTabs();
+  loadProfileContent();
+}
+
+function updateProfileTabs() {
+  const tabs = document.querySelectorAll(".profile-tab");
+  tabs.forEach((tab) => tab.classList.remove("active"));
+
+  const viewToIndex = {
+    posts: 0,
+    comments: 1,
+    saved: 2
+  };
+
+  const activeTab = tabs[viewToIndex[currentProfileView]];
+  if (activeTab) activeTab.classList.add("active");
+}
+
+function goToPreviousProfilePage() {
+  if (currentProfilePage > 1) {
+    currentProfilePage--;
+    renderProfileContent();
+  }
+}
+
+function goToNextProfilePage() {
+  if (currentProfilePage < totalProfilePages) {
+    currentProfilePage++;
+    renderProfileContent();
+  }
+}
+
+async function loadProfileContent() {
+  const container = document.getElementById("profileContent");
   if (!container) return;
 
   container.innerHTML = "Betöltés...";
 
   try {
-    const res = await apiRequest("/posts/me");
-    userPosts = res.data.posts || [];
-
-    container.innerHTML = "";
-
-    if (userPosts.length === 0) {
-      container.innerHTML = "<p>Még nincs saját posztod.</p>";
-      return;
+    if (currentProfileView === "posts") {
+      const res = await apiRequest("/posts/me");
+      userPosts = res.data.posts || [];
+    } else if (currentProfileView === "comments") {
+      const res = await apiRequest("/answers/me/posts");
+      commentedPosts = res.data.posts || [];
     }
 
-    userPosts.forEach((post) => {
-      const div = document.createElement("div");
-      div.className = "user-post clickable-post";
-      div.innerHTML = `
-    <h3>${post.title || ""}</h3>
-    <p>${post.description || ""}</p>
+    renderProfileContent();
+  } catch (err) {
+    container.innerHTML = "Hiba a tartalom betöltésekor";
+  }
+}
 
-    <div class="post-actions">
-      <button type="button" onclick="event.stopPropagation(); editMyPost('${post._id}')">Szerkesztés</button>
-      <button type="button" onclick="event.stopPropagation(); deleteMyPost('${post._id}')">Törlés</button>
-    </div>
-  `;
+function renderProfileContent() {
+  const container = document.getElementById("profileContent");
+  const pageInfo = document.getElementById("profilePageInfo");
+  const prevBtn = document.getElementById("profilePrevPageBtn");
+  const nextBtn = document.getElementById("profileNextPageBtn");
+
+  if (!container) return;
+
+  let items = [];
+
+  if (currentProfileView === "posts") {
+    items = userPosts;
+  } else if (currentProfileView === "comments") {
+    items = commentedPosts;
+  } else if (currentProfileView === "saved") {
+    items = [];
+  }
+
+  const totalItems = items.length;
+  totalProfilePages = Math.max(1, Math.ceil(totalItems / PROFILE_ITEMS_PER_PAGE));
+
+  if (currentProfilePage > totalProfilePages) {
+    currentProfilePage = totalProfilePages;
+  }
+
+  const startIndex = (currentProfilePage - 1) * PROFILE_ITEMS_PER_PAGE;
+  const paginatedItems = items.slice(startIndex, startIndex + PROFILE_ITEMS_PER_PAGE);
+
+  container.innerHTML = "";
+
+  if (currentProfileView === "saved") {
+    container.innerHTML = `<p class="profile-empty">A mentett posztok nézet később jön.</p>`;
+  } else if (paginatedItems.length === 0) {
+    container.innerHTML =
+      currentProfileView === "posts"
+        ? `<p class="profile-empty">Még nincs saját posztod.</p>`
+        : `<p class="profile-empty">Még nem kommenteltél egy poszthoz sem.</p>`;
+  } else {
+    paginatedItems.forEach((post) => {
+      const div = document.createElement("div");
+      div.className = "profile-post-card clickable-post";
+
+      if (currentProfileView === "posts") {
+        div.innerHTML = `
+          <h3>${post.title || ""}</h3>
+          <p>${post.description || ""}</p>
+
+          <div class="post-actions">
+            <button type="button" onclick="event.stopPropagation(); editMyPost('${post._id}')">Szerkesztés</button>
+            <button type="button" onclick="event.stopPropagation(); deleteMyPost('${post._id}')">Törlés</button>
+          </div>
+        `;
+      } else {
+        div.innerHTML = `
+          <h3>${post.title || ""}</h3>
+          <p>${post.description || ""}</p>
+        `;
+      }
 
       div.addEventListener("click", () => {
         openMyPost(post._id);
@@ -249,11 +341,12 @@ async function loadUserPosts() {
 
       container.appendChild(div);
     });
-  } catch (err) {
-    container.innerHTML = "Hiba a posztok betöltésekor";
   }
-}
 
+  pageInfo.textContent = `${currentProfilePage} / ${totalProfilePages}`;
+  prevBtn.disabled = currentProfilePage <= 1;
+  nextBtn.disabled = currentProfilePage >= totalProfilePages;
+}
 function getAuthorName(post) {
   if (post.author && typeof post.author === "object") {
     return post.author.username || "Ismeretlen felhasználó";
@@ -522,7 +615,7 @@ async function deleteMyPost(postId) {
 
   try {
     await apiRequest(`/posts/${postId}`, "DELETE");
-    await loadUserPosts();
+    await loadProfileContent();
     alert("Poszt sikeresen törölve.");
   } catch (err) {
     alert(err.message || "Nem sikerült törölni a posztot.");
@@ -647,5 +740,18 @@ window.addEventListener("DOMContentLoaded", () => {
 
   updateIcon();
   renderNavbar();
+
+  const profilePrevBtn = document.getElementById("profilePrevPageBtn");
+  const profileNextBtn = document.getElementById("profileNextPageBtn");
+
+  if (profilePrevBtn) {
+    profilePrevBtn.addEventListener("click", goToPreviousProfilePage);
+  }
+
+  if (profileNextBtn) {
+    profileNextBtn.addEventListener("click", goToNextProfilePage);
+  }
+
+  updateProfileTabs();
   loadProfile();
 });
