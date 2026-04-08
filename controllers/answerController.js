@@ -153,3 +153,25 @@ exports.deleteAnswer = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.getCommentedPostsByMe = async (req, res, next) => {
+  try {
+    const answers = await Answer.find({ author: req.user._id}).select("post");
+
+    const postIds = [...new Set(answers.map((answer) => answer.post.toString()))];
+
+    const posts = await Post.find({ _id: { $in: postIds} })
+      .sort({ createdAt: -1})
+      .populate("author", "username school profilePicture role");
+
+    res.status(200).json({
+      status: "success",
+      results: posts.length,
+      data: {
+        posts
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
