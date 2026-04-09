@@ -34,6 +34,7 @@ async function apiRequest(endpoint, method = "GET", data = null) {
 }
 
 let posts = [];
+let savedPostIds = [];
 let currentSort = "newest";
 let currentPage = 1;
 let totalPages = 1;
@@ -67,6 +68,82 @@ function getCurrentUser() {
 function getCurrentUserId() {
   const currentUser = getCurrentUser();
   return currentUser?._id || currentUser?.id || null;
+}
+
+async function loadSavedPostIds() {
+  if (!localStorage.getItem("token")) {
+    savedPostIds = [];
+    return;
+  }
+
+  try {
+    const res = await apiRequest("/users/me/saved-posts");
+    const savedPosts = res.data.posts || [];
+    savedPostIds = savedPosts.map(post => post._id);
+  } catch (err) {
+    console.error("Nem sikerült betölteni a mentett posztokat:", err.message);
+    savedPostIds = [];
+  }
+}
+
+function isPostSaved(postId) {
+  return savedPostIds.includes(postId);
+}
+
+function getSaveButtonLabel(postId) {
+  return isPostSaved(postId) ? "🔖 Eltávolítás" : "🔖 Mentés";
+}
+
+async function toggleSavedPost(postId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  if (!localStorage.getItem("token")) {
+    alert("A mentéshez jelentkezz be!");
+    return;
+  }
+
+  try {
+    if (isPostSaved(postId)) {
+      await apiRequest(`/users/saved-posts/${postId}`, "DELETE");
+    } else {
+      await apiRequest(`/users/saved-posts/${postId}`, "POST");
+    }
+
+    await loadSavedPostIds();
+    await loadPosts(currentSearchTerm, currentPage);
+
+    if (currentPostId === postId) {
+      updateModalSaveButton(postId);
+    }
+  } catch (err) {
+    alert(err.message || "Nem sikerült menteni a posztot.");
+  }
+}
+
+function updateModalSaveButton(postId) {
+  const btn = document.getElementById("modalSaveBtn");
+  if (!btn) return;
+
+  btn.classList.toggle("saved", isPostSaved(postId));
+  btn.innerHTML = isPostSaved(postId) ? "🔖" : "📑";
+}
+
+function toggleSaveCurrentPost(event) {
+  if (!currentPostId) return;
+  toggleSavedPost(currentPostId, event);
+}
+
+function isOwnPost(post) {
+  const currentUserId = getCurrentUserId();
+  const authorId =
+    post.author && typeof post.author === "object"
+      ? post.author._id
+      : post.author;
+
+  return currentUserId && authorId === currentUserId;
 }
 
 function goToUserProfile(userId, event) {
@@ -134,7 +211,18 @@ async function loadPosts(searchTerm = currentSearchTerm, page = currentPage) {
             : null;
 
         div.innerHTML = `
-  <h3>${post.title}</h3>
+  <div class="post-card-top">
+    <h3>${post.title}</h3>
+    ${!isOwnPost(post) ? `
+  <button 
+    class="save-post-btn ${isPostSaved(post._id) ? "saved" : ""}"
+    onclick="toggleSavedPost('${post._id}', event)"
+  >
+    ${isPostSaved(post._id) ? "🔖" : "📑"}
+  </button>
+` : ""}
+  </div>
+
   <p>${post.description}</p>
   <div class="post-meta">
     <span>
@@ -190,6 +278,15 @@ async function openModal(postOrId) {
 
   currentPostId = post._id;
 
+  const modalSaveBtn = document.getElementById("modalSaveBtn");
+  if (modalSaveBtn) {
+    if (isOwnPost(post)) {
+      modalSaveBtn.style.display = "none";
+    } else {
+      modalSaveBtn.style.display = "inline-flex";
+    }
+  }
+
   document.getElementById("modal-title").innerText = post.title;
   const postAuthorId =
     post.author && typeof post.author === "object"
@@ -222,6 +319,7 @@ async function openModal(postOrId) {
   document.getElementById("modal").style.display = "flex";
   updateCommentUI();
   await loadMyRating(post._id);
+  updateModalSaveButton(post._id);
 }
 
 function renderAnswers(container, answers, level = 0) {
@@ -260,14 +358,13 @@ function renderAnswers(container, answers, level = 0) {
 
       <div class="comment-actions">
         <button onclick="showReplyBox('${answer._id}')">Válasz</button>
-        ${
-          isOwnAnswer
-            ? `
+        ${isOwnAnswer
+        ? `
             <button onclick="showEditAnswerBox('${answer._id}', event)">Szerkesztés</button>
             <button onclick="deleteAnswer('${answer._id}', event)">Törlés</button>
             `
-            : ""
-          }
+        : ""
+      }
       </div>
 
       <div id="edit-answer-${answer._id}"></div>
@@ -310,41 +407,6 @@ if (toggle) {
     }
   });
 }
-
-window.addEventListener("DOMContentLoaded", () => {
-  const savedTheme = localStorage.getItem("theme");
-
-  if (savedTheme === "dark") {
-    document.body.classList.add("dark");
-    document.documentElement.classList.add("dark");
-
-    const darkToggle = document.getElementById("darkToggle");
-    if (darkToggle) darkToggle.checked = true;
-  }
-
-  const searchInput = document.getElementById("searchInput");
-  const prevBtn = document.getElementById("prevPageBtn");
-  const nextBtn = document.getElementById("nextPageBtn");
-
-  if (searchInput) {
-    searchInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        currentPage = 1;
-        loadPosts(searchInput.value, 1);
-      }
-    });
-  }
-
-  if (prevBtn) {
-    prevBtn.addEventListener("click", goToPreviousPage);
-  }
-
-  if (nextBtn) {
-    nextBtn.addEventListener("click", goToNextPage);
-  }
-
-  loadPosts();
-});
 
 /* CREATE MODAL */
 function openCreateModal() {
@@ -716,7 +778,7 @@ function renderNavbar() {
 
 //meghivas
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
   const savedTheme = localStorage.getItem("theme");
 
   if (savedTheme === "dark") {
@@ -749,6 +811,6 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   renderNavbar();
-
-  loadPosts();
+  await loadSavedPostIds();
+  await loadPosts();
 });

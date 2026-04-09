@@ -211,6 +211,7 @@ async function savePassword() {
 // ====================== USER POSTS ======================
 let userPosts = [];
 let commentedPosts = [];
+let savedPosts = [];
 
 let currentProfilePostId = null;
 let currentEditingPostId = null;
@@ -268,10 +269,14 @@ async function loadProfileContent() {
     } else if (currentProfileView === "comments") {
       const res = await apiRequest("/answers/me/posts");
       commentedPosts = res.data.posts || [];
+    } else if (currentProfileView === "saved") {
+      const res = await apiRequest("/users/me/saved-posts");
+      savedPosts = res.data.posts || [];
     }
 
     renderProfileContent();
   } catch (err) {
+    console.error(err);
     container.innerHTML = "Hiba a tartalom betöltésekor";
   }
 }
@@ -291,7 +296,7 @@ function renderProfileContent() {
   } else if (currentProfileView === "comments") {
     items = commentedPosts;
   } else if (currentProfileView === "saved") {
-    items = [];
+    items = savedPosts;
   }
 
   const totalItems = items.length;
@@ -306,13 +311,14 @@ function renderProfileContent() {
 
   container.innerHTML = "";
 
-  if (currentProfileView === "saved") {
-    container.innerHTML = `<p class="profile-empty">A mentett posztok nézet később jön.</p>`;
-  } else if (paginatedItems.length === 0) {
-    container.innerHTML =
-      currentProfileView === "posts"
-        ? `<p class="profile-empty">Még nincs saját posztod.</p>`
-        : `<p class="profile-empty">Még nem kommenteltél egy poszthoz sem.</p>`;
+  if (paginatedItems.length === 0) {
+    if (currentProfileView === "posts") {
+      container.innerHTML = `<p class="profile-empty">Még nincs saját posztod.</p>`;
+    } else if (currentProfileView === "comments") {
+      container.innerHTML = `<p class="profile-empty">Még nem kommenteltél egy poszthoz sem.</p>`;
+    } else {
+      container.innerHTML = `<p class="profile-empty">Még nincs mentett posztod.</p>`;
+    }
   } else {
     paginatedItems.forEach((post) => {
       const div = document.createElement("div");
@@ -320,19 +326,28 @@ function renderProfileContent() {
 
       if (currentProfileView === "posts") {
         div.innerHTML = `
-          <h3>${post.title || ""}</h3>
-          <p>${post.description || ""}</p>
+    <h3>${post.title || ""}</h3>
+    <p>${post.description || ""}</p>
 
-          <div class="post-actions">
-            <button type="button" onclick="event.stopPropagation(); editMyPost('${post._id}')">Szerkesztés</button>
-            <button type="button" onclick="event.stopPropagation(); deleteMyPost('${post._id}')">Törlés</button>
-          </div>
-        `;
+    <div class="post-actions">
+      <button type="button" onclick="event.stopPropagation(); editMyPost('${post._id}')">Szerkesztés</button>
+      <button type="button" onclick="event.stopPropagation(); deleteMyPost('${post._id}')">Törlés</button>
+    </div>
+  `;
+      } else if (currentProfileView === "saved") {
+        div.innerHTML = `
+    <h3>${post.title || ""}</h3>
+    <p>${post.description || ""}</p>
+
+    <div class="post-actions">
+      <button type="button" onclick="event.stopPropagation(); removeSavedPost('${post._id}')">Eltávolítás</button>
+    </div>
+  `;
       } else {
         div.innerHTML = `
-          <h3>${post.title || ""}</h3>
-          <p>${post.description || ""}</p>
-        `;
+    <h3>${post.title || ""}</h3>
+    <p>${post.description || ""}</p>
+  `;
       }
 
       div.addEventListener("click", () => {
@@ -398,11 +413,10 @@ function renderProfileAnswers(container, answers, level = 0) {
     wrapper.innerHTML = `
       <p>
         <strong>
-          ${
-            authorId
-              ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${authorName}</a>`
-              : authorName
-          }
+          ${authorId
+        ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${authorName}</a>`
+        : authorName
+      }
         </strong>
         • ${new Date(answer.createdAt).toLocaleDateString("hu-HU")}
       </p>
@@ -571,6 +585,15 @@ async function openMyPost(postId) {
   }
 }
 
+async function removeSavedPost(postId) {
+  try {
+    await apiRequest(`/users/saved-posts/${postId}`, "DELETE");
+    await loadProfileContent();
+  } catch (err) {
+    alert(err.message || "Nem sikerült eltávolítani a mentett posztot.");
+  }
+}
+
 function updateProfileCommentUI() {
   const token = localStorage.getItem("token");
   const box = document.getElementById("profileCommentBox");
@@ -666,7 +689,7 @@ async function saveEditedPost() {
     });
 
     closeEditPostModal();
-    await loadUserPosts();
+    await loadProfileContent();
     alert("Poszt sikeresen frissítve.");
   } catch (err) {
     errorEl.textContent = err.message || "Nem sikerült frissíteni a posztot.";
