@@ -83,7 +83,10 @@
   <!-- MODAL -->
   <div class="modal" id="modal" onclick="closeModal(event)">
     <div class="modal-content">
-      <h2 id="modal-title"></h2>
+      <div class="modal-top-row">
+        <h2 id="modal-title"></h2>
+        <button id="modalSaveBtn" class="save-post-btn" onclick="toggleSavedPost(currentPostId, event)">📑</button>
+      </div>
       <p id="modal-author"></p>
       <p id="modal-desc"></p>
       <hr>

@@ -261,3 +261,25 @@ A backend jelenleg támogatja:
 - Ez fontos, mert így a felhasználó tudni fogja, hogy értékelte már a posztot.
 - Az értékelése átírásával tudja módosítani az értékelését.
 - A felhasználó ezentúl tudja a saját válaszait szerkeszteni és törölni is, nem csak a fő oldalon, hanem mindenhol, ahol elérheti őket (főoldal, saját profil, mások profilja).
+
+## 2026-04-08 profil oldali paginate és kommentek
+
+- A felhasználó a saját profilját megtekintve, megnézheti azokat a posztokat is, amikre válaszolt és nem csak azokat, amelyeket ő hozott létre.
+- A jobb felhasználói élmény érdekében, a profil oldalon is pagination-t használunk, így maximum 5 poszt tölt be egyszerre, ezt még másik user profil oldalon még implementálni kell.
+
+## 2026-04-09 poszt mentés
+
+- A felhasználó modell ki lett bővítve savedPosts mezővel.
+- A mentett posztok id alapon kerülnek elmentésre a felhasználóknál.
+- Új endpointok:
+  - `GET /api/v1/users/me/saved-posts`
+  - `GET /api/v1/users/saved-posts/:postId`
+  - `POST /api/v1/users/saved-posts/:postId`
+  - `DELETE /api/v1/users/saved-posts/:postId`
+- A főoldalon megjelenik a mentés gomb a posztkártyákon.
+- A poszt modalban is megjelenik a mentés gomb.
+- Más felhasználók profiloldalán is elérhető a mentés funkció.
+- A mentés gomb állapota frissül betöltéskor és mentés/törlés után is.
+- A saját profil oldalon elkészült a „Mentett posztok” nézet.
+- A mentett posztok listájában az elemek eltávolíthatók a mentések közül.
+- A felhasználó nem tudja elmenteni a saját posztjait.

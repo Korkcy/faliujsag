@@ -1,4 +1,5 @@
 const User = require('../models/userModel');
+const Post = require('../models/postModel');
 const AppError = require('../utils/appError');
 const bcrypt = require('bcrypt');
 
@@ -99,6 +100,112 @@ exports.getUserById = async (req, res, next) => {
             status: "success",
             data: {
                 user
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.getSavedPosts = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user._id).populate({
+            path: 'savedPosts',
+            populate: {
+                path: 'author',
+                select: 'username school profilePicture role'
+            }
+        });
+
+        if(!user){
+            return next(new AppError("A felhasználó nem található", 404));
+        }
+
+        res.status(200).json({
+            status: "success",
+            results: user.savedPosts.length,
+            data: {
+                posts: user.savedPosts
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.savePost = async (req, res, next) => {
+    try {
+        const {postId} = req.params;
+
+        const post = await Post.findById(postId);
+        if(!post){
+            return next(new AppError("Nincs ilyen poszt", 404));
+        }
+
+        const user = await User.findById(req.user._id);
+
+        const alreadySaved = user.savedPosts.some(
+            savedPostId => savedPostId.toString() === postId
+        );
+
+        if(alreadySaved){
+            return next(new AppError("Ez a poszt már el van mentve", 400));
+        }
+
+        const updateUser = await User.findByIdAndUpdate(
+            req.user._id,
+            { $addToSet: {savedPosts: postId}},
+            {new: true}
+        );
+
+        res.status(200).json({
+            status: "success",
+            message: "Poszt elmentve",
+            data: {
+                savedPosts: updateUser.savedPosts
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.unsavePost = async (req, res, next) => {
+    try {
+        const {postId} = req.params;
+
+        const updateUser = await User.findByIdAndUpdate(
+            req.user._id,
+            { $pull: { savedPosts: postId } },
+            { new: true }
+        );
+
+        res.status(200).json({
+            status: "success",
+            message: "Poszt eltávolítva a mentettek közül",
+            data: {
+                savedPosts: updateUser.savedPosts
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.isPostSaved = async (req, res, next) => {
+    try {
+        const {postId} = req.params;
+
+        const user = await User.findById(req.user._id);
+
+        const isSaved = user.savedPosts.some(
+            savedPostId => savedPostId.toString() === postId
+        );
+
+        res.status(200).json({
+            status: "success",
+            data: {
+                isSaved
             }
         });
     } catch (err) {

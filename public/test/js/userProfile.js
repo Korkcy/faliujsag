@@ -117,8 +117,77 @@ function getAuthorName(post) {
 }
 
 let viewedUserPosts = [];
+let viewedSavedPostIds = [];
 let selectedViewedHelpful = null;
 let currentViewedPostId = null;
+
+let currentViewedPage = 1;
+let totalViewedPages = 1;
+const VIEWED_POSTS_PER_PAGE = 5;
+
+function renderViewedUserPosts() {
+  const container = document.getElementById("userPosts");
+  const pageInfo = document.getElementById("userPageInfo");
+  const prevBtn = document.getElementById("userPrevPageBtn");
+  const nextBtn = document.getElementById("userNextPageBtn");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (viewedUserPosts.length === 0) {
+    container.innerHTML = "<p>Ennek a felhasználónak még nincs posztja.</p>";
+
+    if (pageInfo) pageInfo.textContent = "1 / 1";
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
+    return;
+  }
+
+  totalViewedPages = Math.max(
+    1,
+    Math.ceil(viewedUserPosts.length / VIEWED_POSTS_PER_PAGE)
+  );
+
+  if (currentViewedPage > totalViewedPages) {
+    currentViewedPage = totalViewedPages;
+  }
+
+  const startIndex = (currentViewedPage - 1) * VIEWED_POSTS_PER_PAGE;
+  const paginatedPosts = viewedUserPosts.slice(
+    startIndex,
+    startIndex + VIEWED_POSTS_PER_PAGE
+  );
+
+  paginatedPosts.forEach((post) => {
+    const div = document.createElement("div");
+    div.className = "user-post clickable-post";
+
+    div.innerHTML = `
+      <div class="post-card-top">
+        <h3>${post.title || ""}</h3>
+        ${localStorage.getItem("token")
+          ? `<button 
+                type="button" 
+                class="save-post-btn ${isViewedPostSaved(post._id) ? "saved" : ""}" 
+                onclick="toggleViewedSavedPost('${post._id}', event)"
+              >
+                ${getViewedSaveButtonLabel(post._id)}
+              </button>`
+          : ""
+        }
+      </div>
+      <p>${post.description || ""}</p>
+    `;
+
+    div.addEventListener("click", () => openViewedUserPost(post._id));
+    container.appendChild(div);
+  });
+
+  if (pageInfo) pageInfo.textContent = `${currentViewedPage} / ${totalViewedPages}`;
+  if (prevBtn) prevBtn.disabled = currentViewedPage <= 1;
+  if (nextBtn) nextBtn.disabled = currentViewedPage >= totalViewedPages;
+}
 
 async function loadViewedUserProfile() {
   const userId = getUserIdFromUrl();
@@ -146,27 +215,25 @@ async function loadViewedUserProfile() {
     const postsRes = await apiRequest(`/posts/user/${userId}`, "GET");
     viewedUserPosts = postsRes.data.posts || [];
 
-    const container = document.getElementById("userPosts");
-    container.innerHTML = "";
-
-    if (viewedUserPosts.length === 0) {
-      container.innerHTML = "<p>Ennek a felhasználónak még nincs posztja.</p>";
-      return;
-    }
-
-    viewedUserPosts.forEach((post) => {
-      const div = document.createElement("div");
-      div.className = "user-post clickable-post";
-      div.innerHTML = `
-        <h3>${post.title || ""}</h3>
-        <p>${post.description || ""}</p>
-      `;
-      div.addEventListener("click", () => openViewedUserPost(post._id));
-      container.appendChild(div);
-    });
+    currentViewedPage = 1;
+    renderViewedUserPosts();
   } catch (err) {
     console.error(err);
     alert("Nem sikerült betölteni a felhasználó profilját.");
+  }
+}
+
+function goToPreviousViewedPage() {
+  if (currentViewedPage > 1) {
+    currentViewedPage--;
+    renderViewedUserPosts();
+  }
+}
+
+function goToNextViewedPage() {
+  if (currentViewedPage < totalViewedPages) {
+    currentViewedPage++;
+    renderViewedUserPosts();
   }
 }
 
@@ -196,8 +263,8 @@ function renderUserAnswers(container, answers, level = 0) {
       <p>
         <strong>
           ${authorId
-            ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${authorName}</a>`
-            : authorName}
+        ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${authorName}</a>`
+        : authorName}
         </strong>
         • ${new Date(answer.createdAt).toLocaleDateString("hu-HU")}
       </p>
@@ -205,14 +272,13 @@ function renderUserAnswers(container, answers, level = 0) {
 
       <div class="comment-actions">
         <button onclick="showUserReplyBox('${answer._id}')">Válasz</button>
-        ${
-          isOwnAnswer
-            ? `
+        ${isOwnAnswer
+        ? `
               <button onclick="showUserEditAnswerBox('${answer._id}', event)">Szerkesztés</button>
               <button onclick="deleteUserAnswer('${answer._id}', event)">Törlés</button>
             `
-            : ""
-        }
+        : ""
+      }
       </div>
 
       <div id="user-edit-answer-${answer._id}"></div>
@@ -225,6 +291,48 @@ function renderUserAnswers(container, answers, level = 0) {
       renderUserAnswers(container, answer.replies, level + 1);
     }
   });
+}
+
+async function toggleViewedSavedPost(postId, event = null) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  if (!localStorage.getItem("token")) {
+    alert("Mentéshez jelentkezz be!");
+    return;
+  }
+
+  try {
+    if (isViewedPostSaved(postId)) {
+      await apiRequest(`/users/saved-posts/${postId}`, "DELETE");
+    } else {
+      await apiRequest(`/users/saved-posts/${postId}`, "POST");
+    }
+
+    await loadViewedSavedPosts();
+    await loadViewedUserProfile();
+
+    if (currentViewedPostId === postId) {
+      updateViewedModalSaveButton(postId);
+    }
+  } catch (err) {
+    alert(err.message || "Nem sikerült módosítani a mentett posztokat.");
+  }
+}
+
+function updateViewedModalSaveButton(postId) {
+  const btn = document.getElementById("userModalSaveBtn");
+  if (!btn) return;
+
+  if (!localStorage.getItem("token")) {
+    btn.style.display = "none";
+    return;
+  }
+
+  btn.style.display = "inline-flex";
+  btn.textContent = getViewedSaveButtonLabel(postId);
 }
 
 async function openViewedUserPost(postId) {
@@ -260,11 +368,38 @@ async function openViewedUserPost(postId) {
     updateUserCommentUI();
 
     document.getElementById("userPostModal").style.display = "flex";
+    updateViewedModalSaveButton(postId);
     await loadViewedPostRating(postId);
   } catch (err) {
     console.error(err);
     alert("Nem sikerült megnyitni a posztot.");
   }
+}
+
+async function loadViewedSavedPosts() {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    viewedSavedPostIds = [];
+    return;
+  }
+
+  try {
+    const response = await apiRequest("/users/me/saved-posts", "GET");
+    const savedPosts = response.data.posts || [];
+    viewedSavedPostIds = savedPosts.map(post => post._id);
+  } catch (err) {
+    console.error("Nem sikerült betölteni a mentett posztokat:", err.message);
+    viewedSavedPostIds = [];
+  }
+}
+
+function isViewedPostSaved(postId) {
+  return viewedSavedPostIds.includes(postId);
+}
+
+function getViewedSaveButtonLabel(postId) {
+  return isViewedPostSaved(postId) ? "🔖" : "📑";
 }
 
 function closeUserPostModal(event) {
@@ -571,12 +706,25 @@ if (canvas) {
   draw();
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
   if (localStorage.getItem("theme") === "dark") {
     document.documentElement.classList.add("dark");
   }
 
   updateIcon();
   renderNavbar();
-  loadViewedUserProfile();
+
+  const prevBtn = document.getElementById("userPrevPageBtn");
+  const nextBtn = document.getElementById("userNextPageBtn");
+
+  if (prevBtn) {
+    prevBtn.addEventListener("click", goToPreviousViewedPage);
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener("click", goToNextViewedPage);
+  }
+
+  await loadViewedSavedPosts();
+  await loadViewedUserProfile();
 });

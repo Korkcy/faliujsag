@@ -606,6 +606,14 @@ html.dark .filters button:hover {
   background: var(--card);
   padding: 20px;
   border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#profileContent,
+#userPosts {
+  width: 100%;
 }
 
 .user-post {
@@ -822,12 +830,13 @@ html.dark .btn-outline:hover {
 }
 
 .pagination {
-  width: 600px;
+  width: 100%;
+  max-width: 600px;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 14px;
-  margin: 24px 0 40px;
+  margin: 24px auto 0;
 }
 
 .pagination button {
@@ -992,4 +1001,48 @@ html:not(.dark) .profile-tab:hover {
 .profile-empty {
   opacity: 0.8;
   padding: 10px 0;
+}
+.post-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.save-post-btn {
+  border: none;
+  background: rgba(255,255,255,0.06);
+  color: white;
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 18px;
+  min-width: 44px;
+}
+
+.save-post-btn:hover {
+  transform: scale(1.08);
+  background: rgba(255,255,255,0.12);
+}
+
+.save-post-btn.saved {
+  background: rgba(74, 144, 226, 0.25);
+  color: #4a90e2;
+}
+
+.modal-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.modal-top-row h2 {
+  margin: 0;
+  flex: 1;
+}
+
+.modal-top-row .save-post-btn {
+  flex-shrink: 0;
 }

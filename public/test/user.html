@@ -59,41 +59,53 @@
                 <div class="profile-posts">
                     <h2>User posts</h2>
                     <div id="userPosts"></div>
+
+                    <div class="pagination" id="userPagination">
+                        <button type="button" id="userPrevPageBtn">Előző</button>
+                        <span id="userPageInfo">1 / 1</span>
+                        <button type="button" id="userNextPageBtn">Következő</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="modal" id="userPostModal" onclick="closeUserPostModal(event)">
-    <div class="modal-content">
-        <h2 id="userModalTitle"></h2>
-        <p id="userModalAuthor"></p>
-        <p id="userModalDesc"></p>
-        <hr>
-        <div id="userModalComments"></div>
+        <div class="modal-content">
+            <div class="modal-top-row">
+                <h2 id="userModalTitle"></h2>
+                <button type="button" id="userModalSaveBtn" class="save-post-btn"
+                    onclick="toggleViewedSavedPost(currentViewedPostId, event)">
+                    🔖 Mentés
+                </button>
+            </div>
+            <p id="userModalAuthor"></p>
+            <p id="userModalDesc"></p>
+            <hr>
+            <div id="userModalComments"></div>
 
-        <div class="comment-box" id="userCommentBox">
-            <textarea id="userNewCommentText" placeholder="Írj kommentet..."></textarea>
-            <button onclick="submitUserComment()">Küldés</button>
-        </div>
-
-        <div class="rating-box">
-            <p>Hasznos volt ez a poszt?</p>
-
-            <div class="rating-actions">
-                <button id="userHelpfulYesBtn" onclick="rateViewedPost(true)">👍 Igen</button>
-                <button id="userHelpfulNoBtn" onclick="rateViewedPost(false)">👎 Nem</button>
+            <div class="comment-box" id="userCommentBox">
+                <textarea id="userNewCommentText" placeholder="Írj kommentet..."></textarea>
+                <button onclick="submitUserComment()">Küldés</button>
             </div>
 
-            <div class="rating-number">
-                <input type="number" id="userRatingScore" min="1" max="10" placeholder="1-10">
-                <button onclick="submitViewedPostRating()">Értékelés</button>
-            </div>
+            <div class="rating-box">
+                <p>Hasznos volt ez a poszt?</p>
 
-            <p id="userRatingMessage"></p>
+                <div class="rating-actions">
+                    <button id="userHelpfulYesBtn" onclick="rateViewedPost(true)">👍 Igen</button>
+                    <button id="userHelpfulNoBtn" onclick="rateViewedPost(false)">👎 Nem</button>
+                </div>
+
+                <div class="rating-number">
+                    <input type="number" id="userRatingScore" min="1" max="10" placeholder="1-10">
+                    <button onclick="submitViewedPostRating()">Értékelés</button>
+                </div>
+
+                <p id="userRatingMessage"></p>
+            </div>
         </div>
     </div>
-</div>
 
     <script src="./js/userProfile.js"></script>
 </body>

@@ -45,7 +45,13 @@ const userSchema = new mongoose.Schema({
     },
     school: {
         type: String
-    }
+    },
+    savedPosts: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Post'
+        }
+    ]
 },
 {
     timestamps: true
