@@ -1048,3 +1048,37 @@ html:not(.dark) .profile-tab:hover {
 .modal-top-row .save-post-btn {
   flex-shrink: 0;
 }
+
+.admin-delete-btn {
+  background: #7a1f1f;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-delete-btn:hover {
+  background: #a52a2a;
+}
+
+.admin-delete-answer-btn {
+  padding: 6px 9px;
+  font-size: 14px;
+}
+
+.modal-top-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.comment-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}

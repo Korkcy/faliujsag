@@ -109,6 +109,75 @@ function getCurrentUser() {
   }
 }
 
+async function syncCurrentUser() {
+  if (!localStorage.getItem("token")) return;
+
+  try {
+    const res = await apiRequest("/users/me", "GET");
+    const freshUser = res.data.user;
+
+    if (freshUser) {
+      localStorage.setItem("user", JSON.stringify(freshUser));
+    }
+  } catch (err) {
+    console.error("Nem sikerült frissíteni a current usert:", err.message);
+  }
+}
+
+function isAdmin() {
+  const token = localStorage.getItem("token");
+  const currentUser = getCurrentUser();
+
+  return !!token && currentUser?.role === "admin";
+}
+
+function updateViewedModalAdminDeleteButton() {
+  const btn = document.getElementById("userModalAdminDeleteBtn");
+  if (!btn) return;
+
+  btn.style.display = isAdmin() ? "inline-flex" : "none";
+}
+
+async function adminDeleteViewedPost(postId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  if (!isAdmin()) return;
+
+  const confirmed = confirm("Biztosan törölni szeretnéd ezt a posztot adminisztrátorként?");
+  if (!confirmed) return;
+
+  try {
+    await apiRequest(`/posts/${postId}`, "DELETE");
+    closeUserPostModal();
+    await loadViewedUserProfile();
+  } catch (err) {
+    alert(err.message || "Nem sikerült törölni a posztot.");
+  }
+}
+
+async function adminDeleteViewedAnswer(answerId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  if (!isAdmin()) return;
+
+  const confirmed = confirm("Biztosan törölni szeretnéd ezt a választ adminisztrátorként?");
+  if (!confirmed) return;
+
+  try {
+    await apiRequest(`/answers/${answerId}`, "DELETE");
+    await openViewedUserPost(currentViewedPostId);
+    await loadViewedUserProfile();
+  } catch (err) {
+    alert(err.message || "Nem sikerült törölni a választ.");
+  }
+}
+
 function getAuthorName(post) {
   if (post.author && typeof post.author === "object") {
     return post.author.username || "Ismeretlen felhasználó";
@@ -271,15 +340,28 @@ function renderUserAnswers(container, answers, level = 0) {
       </p>
       <p>${answer.text}</p>
 
-      <div class="comment-actions">
-        <button onclick="showUserReplyBox('${answer._id}')">Válasz</button>
-        ${isOwnAnswer
-        ? `
+      <div class="comment-card-top">
+        <div class="comment-actions">
+          <button onclick="showUserReplyBox('${answer._id}')">Válasz</button>
+          ${
+            isOwnAnswer
+            ? `
               <button onclick="showUserEditAnswerBox('${answer._id}', event)">Szerkesztés</button>
               <button onclick="deleteUserAnswer('${answer._id}', event)">Törlés</button>
+              `
+            : ""
+          }
+        </div>
+
+        ${
+          isAdmin() && !isOwnAnswer
+          ? `
+            <button class="admin-delete-btn admin-delete-answer-btn" onclick="adminDeleteViewedAnswer('${answer._id}', event)">
+              🔨
+            </button>
             `
-        : ""
-      }
+          : ""
+         }
       </div>
 
       <div id="user-edit-answer-${answer._id}"></div>
@@ -377,6 +459,7 @@ async function openViewedUserPost(postId) {
 
     document.getElementById("userPostModal").style.display = "flex";
     updateViewedModalSaveButton(postId);
+    updateViewedModalAdminDeleteButton();
     await loadViewedPostRating(postId);
   } catch (err) {
     console.error(err);
@@ -720,6 +803,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   updateIcon();
+  await syncCurrentUser();
   renderNavbar();
 
   const prevBtn = document.getElementById("userPrevPageBtn");
