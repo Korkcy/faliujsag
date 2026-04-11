@@ -124,6 +124,27 @@ function enableEditMode() {
   document.getElementById("school").disabled = false;
 
   document.getElementById("saveProfileBtn").style.display = "block";
+  document.getElementById("cancelEditProfileBtn").style.display = "inline-block";
+  document.getElementById("editProfileBtn").style.display = "none";
+
+  loadProfile();
+}
+
+function cancelEditMode() {
+  document.getElementById("profilePicture").disabled = true;
+  document.getElementById("email").disabled = true;
+  document.getElementById("username").disabled = true;
+  document.getElementById("school").disabled = true;
+
+  document.getElementById("saveProfileBtn").style.display = "none";
+
+  const cancelBtn = document.getElementById("cancelEditProfileBtn");
+  const editBtn = document.getElementById("editProfileBtn");
+
+  if (cancelBtn) cancelBtn.style.display = "none";
+  if (editBtn) editBtn.style.display = "inline-block";
+
+  loadProfile();
 }
 
 async function loadProfile() {
@@ -173,6 +194,8 @@ async function saveProfile() {
     document.getElementById("school").disabled = true;
 
     document.getElementById("saveProfileBtn").style.display = "none";
+    document.getElementById("cancelEditProfileBtn").style.display = "none";
+    document.getElementById("editProfileBtn").style.display = "inline-block";
 
     alert("Profil sikeresen frissítve!");
   } catch (err) {
@@ -557,8 +580,14 @@ async function openMyPost(postId) {
     const post = postRes.data.post;
 
     document.getElementById("profileModalTitle").innerText = post.title;
-    document.getElementById("profileModalAuthor").innerText =
-      `by ${getAuthorName(post)}`;
+    const postAuthorId =
+      post.author && typeof post.author === "object"
+        ? post.author._id
+        : null;
+
+    document.getElementById("profileModalAuthor").innerHTML = postAuthorId
+      ? `by <a href="#" onclick="goToUserProfile('${postAuthorId}', event)">${getAuthorName(post)}</a>`
+      : `by ${getAuthorName(post)}`;
     document.getElementById("profileModalDesc").innerText = post.description;
 
     const commentsContainer = document.getElementById("profileModalComments");
@@ -588,7 +617,8 @@ async function openMyPost(postId) {
 async function removeSavedPost(postId) {
   try {
     await apiRequest(`/users/saved-posts/${postId}`, "DELETE");
-    await loadProfileContent();
+    savedPosts = savedPosts.filter(post => post._id !== postId);
+    renderProfileContent();
   } catch (err) {
     alert(err.message || "Nem sikerült eltávolítani a mentett posztot.");
   }

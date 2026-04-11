@@ -283,3 +283,5 @@ A backend jelenleg támogatja:
 - A saját profil oldalon elkészült a „Mentett posztok” nézet.
 - A mentett posztok listájában az elemek eltávolíthatók a mentések közül.
 - A felhasználó nem tudja elmenteni a saját posztjait.
+- A lapozás, mostmár mindenhol működik.
+- Meg kell csinálni, hogy a mentésnél, ne töltsön mindig újra az oldal.

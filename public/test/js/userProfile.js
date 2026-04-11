@@ -168,12 +168,13 @@ function renderViewedUserPosts() {
         <h3>${post.title || ""}</h3>
         ${localStorage.getItem("token")
           ? `<button 
-                type="button" 
-                class="save-post-btn ${isViewedPostSaved(post._id) ? "saved" : ""}" 
-                onclick="toggleViewedSavedPost('${post._id}', event)"
-              >
-                ${getViewedSaveButtonLabel(post._id)}
-              </button>`
+              type="button"
+              class="save-post-btn card-save-btn ${isViewedPostSaved(post._id) ? "saved" : ""}"
+              data-viewed-post-id="${post._id}"
+              onclick="toggleViewedSavedPost('${post._id}', event)"
+            >
+            ${isViewedPostSaved(post._id) ? "🔖" : "📑"}
+            </button>`
           : ""
         }
       </div>
@@ -293,6 +294,14 @@ function renderUserAnswers(container, answers, level = 0) {
   });
 }
 
+function updateViewedSaveButtons(postId) {
+  const buttons = document.querySelectorAll(`[data-viewed-post-id="${postId}"]`);
+  buttons.forEach((btn) => {
+    btn.classList.toggle("saved", isViewedPostSaved(postId));
+    btn.innerHTML = isViewedPostSaved(postId) ? "🔖" : "📑";
+  });
+}
+
 async function toggleViewedSavedPost(postId, event = null) {
   if (event) {
     event.preventDefault();
@@ -307,16 +316,14 @@ async function toggleViewedSavedPost(postId, event = null) {
   try {
     if (isViewedPostSaved(postId)) {
       await apiRequest(`/users/saved-posts/${postId}`, "DELETE");
+      viewedSavedPostIds = viewedSavedPostIds.filter(id => id !== postId);
     } else {
       await apiRequest(`/users/saved-posts/${postId}`, "POST");
+      viewedSavedPostIds.push(postId);
     }
 
-    await loadViewedSavedPosts();
-    await loadViewedUserProfile();
-
-    if (currentViewedPostId === postId) {
-      updateViewedModalSaveButton(postId);
-    }
+    updateViewedSaveButtons(postId);
+    updateViewedModalSaveButton(postId);
   } catch (err) {
     alert(err.message || "Nem sikerült módosítani a mentett posztokat.");
   }
@@ -332,6 +339,7 @@ function updateViewedModalSaveButton(postId) {
   }
 
   btn.style.display = "inline-flex";
+  btn.classList.toggle("saved", isViewedPostSaved(postId));
   btn.textContent = getViewedSaveButtonLabel(postId);
 }
 
