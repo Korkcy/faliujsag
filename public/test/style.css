@@ -885,6 +885,7 @@ html.dark .pagination button:hover {
 
 .post-meta a,
 .answer-item a,
+#profileModalAuthor a,
 #modal-author a,
 #userModalAuthor a {
   color: inherit;
@@ -894,6 +895,7 @@ html.dark .pagination button:hover {
 
 .post-meta a:hover,
 .answer-item a:hover,
+#profileModalAuthor a:hover,
 #modal-author a:hover,
 #userModalAuthor a:hover {
   text-decoration: underline;

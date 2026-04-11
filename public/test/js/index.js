@@ -94,6 +94,14 @@ function getSaveButtonLabel(postId) {
   return isPostSaved(postId) ? "🔖 Eltávolítás" : "🔖 Mentés";
 }
 
+function updatePostSaveButtons(postId) {
+  const buttons = document.querySelectorAll(`[data-post-id="${postId}"]`);
+  buttons.forEach((btn) => {
+    btn.classList.toggle("saved", isPostSaved(postId));
+    btn.innerHTML = isPostSaved(postId) ? "🔖" : "📑";
+  });
+}
+
 async function toggleSavedPost(postId, event) {
   if (event) {
     event.preventDefault();
@@ -108,12 +116,13 @@ async function toggleSavedPost(postId, event) {
   try {
     if (isPostSaved(postId)) {
       await apiRequest(`/users/saved-posts/${postId}`, "DELETE");
+      savedPostIds = savedPostIds.filter(id => id !== postId);
     } else {
       await apiRequest(`/users/saved-posts/${postId}`, "POST");
+      savedPostIds.push(postId);
     }
 
-    await loadSavedPostIds();
-    await loadPosts(currentSearchTerm, currentPage);
+    updatePostSaveButtons(postId);
 
     if (currentPostId === postId) {
       updateModalSaveButton(postId);
@@ -214,12 +223,13 @@ async function loadPosts(searchTerm = currentSearchTerm, page = currentPage) {
   <div class="post-card-top">
     <h3>${post.title}</h3>
     ${!isOwnPost(post) ? `
-  <button 
-    class="save-post-btn ${isPostSaved(post._id) ? "saved" : ""}"
-    onclick="toggleSavedPost('${post._id}', event)"
-  >
+    <button 
+      class="save-post-btn ${isPostSaved(post._id) ? "saved" : ""}"
+      data-post-id="${post._id}"
+      onclick="toggleSavedPost('${post._id}', event)"
+    >
     ${isPostSaved(post._id) ? "🔖" : "📑"}
-  </button>
+    </button>
 ` : ""}
   </div>
 
