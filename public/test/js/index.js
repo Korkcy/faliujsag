@@ -65,9 +65,72 @@ function getCurrentUser() {
   }
 }
 
+async function syncCurrentUser() {
+  if (!localStorage.getItem("token")) return;
+
+  try {
+    const res = await apiRequest("/users/me", "GET");
+    const freshUser = res.data.user;
+
+    if (freshUser) {
+      localStorage.setItem("user", JSON.stringify(freshUser));
+    }
+  } catch (err) {
+    console.error("Nem sikerült frissíteni a current usert:", err.message);
+  }
+}
+
 function getCurrentUserId() {
   const currentUser = getCurrentUser();
   return currentUser?._id || currentUser?.id || null;
+}
+
+function isAdmin() {
+  const token = localStorage.getItem("token");
+  const currentUser = getCurrentUser();
+
+  return !!token && currentUser?.role === "admin";
+}
+
+async function adminDeletePost(postId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  if (!isAdmin()) return;
+
+  const confirmed = confirm("Biztosan törölni szeretnéd ezt a posztot adminisztrátorként?");
+  if (!confirmed) return;
+
+  try {
+    await apiRequest(`/posts/${postId}`, "DELETE");
+
+    closeModal();
+    await loadPosts(currentSearchTerm, currentPage);
+  } catch (err) {
+    alert(err.message || "Nem sikerült törölni a posztot.");
+  }
+}
+
+async function adminDeleteAnswer(answerId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  if (!isAdmin()) return;
+
+  const confirmed = confirm("Biztosan törölni szeretnéd ezt a választ adminisztrátorként?");
+  if (!confirmed) return;
+
+  try {
+    await apiRequest(`/answers/${answerId}`, "DELETE");
+    await openModal(currentPostId);
+    await loadPosts(currentSearchTerm, currentPage);
+  } catch (err) {
+    alert(err.message || "Nem sikerült törölni a választ.");
+  }
 }
 
 async function loadSavedPostIds() {
@@ -138,6 +201,13 @@ function updateModalSaveButton(postId) {
 
   btn.classList.toggle("saved", isPostSaved(postId));
   btn.innerHTML = isPostSaved(postId) ? "🔖" : "📑";
+}
+
+function updateModalAdminDeleteButton() {
+  const btn = document.getElementById("modalAdminDeleteBtn");
+  if (!btn) return;
+
+  btn.style.display = isAdmin() ? "inline-flex" : "none";
 }
 
 function toggleSaveCurrentPost(event) {
@@ -330,6 +400,7 @@ async function openModal(postOrId) {
   updateCommentUI();
   await loadMyRating(post._id);
   updateModalSaveButton(post._id);
+  updateModalAdminDeleteButton();
 }
 
 function renderAnswers(container, answers, level = 0) {
@@ -366,16 +437,28 @@ function renderAnswers(container, answers, level = 0) {
 
       <p id="answer-text-${answer._id}">${answer.text}</p>
 
-      <div class="comment-actions">
-        <button onclick="showReplyBox('${answer._id}')">Válasz</button>
-        ${isOwnAnswer
-        ? `
+      <div class="comment-card-top">
+        <div class="comment-actions">
+          <button onclick="showReplyBox('${answer._id}')">Válasz</button>
+          ${
+            isOwnAnswer
+            ? `
             <button onclick="showEditAnswerBox('${answer._id}', event)">Szerkesztés</button>
             <button onclick="deleteAnswer('${answer._id}', event)">Törlés</button>
             `
-        : ""
-      }
-      </div>
+            : ""
+          }
+        </div>
+        ${
+          isAdmin() && !isOwnAnswer
+          ? `
+          <button class="admin-delete-btn admin-delete-answer-btn" onclick="adminDeleteAnswer('${answer._id}', event)">
+          🔨
+          </button>
+          `
+          : ""
+        }
+        </div>
 
       <div id="edit-answer-${answer._id}"></div>
       <div id="reply-${answer._id}"></div>
@@ -466,6 +549,7 @@ function setSort(type) {
 
 function logout() {
   localStorage.removeItem("token");
+  localStorage.removeItem("user");
   location.reload();
 }
 
@@ -820,6 +904,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     nextBtn.addEventListener("click", goToNextPage);
   }
 
+  await syncCurrentUser();
   renderNavbar();
   await loadSavedPostIds();
   await loadPosts();

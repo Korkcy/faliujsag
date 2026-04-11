@@ -74,6 +74,10 @@
         <div class="modal-content">
             <div class="modal-top-row">
                 <h2 id="userModalTitle"></h2>
+                <button type="button" id="userModalAdminDeleteBtn" class="admin-delete-btn"
+                    onclick="adminDeleteViewedPost(currentViewedPostId, event)" style="display: none;">
+                    🔨
+                </button>
                 <button type="button" id="userModalSaveBtn" class="save-post-btn"
                     onclick="toggleViewedSavedPost(currentViewedPostId, event)">
                     🔖 Mentés

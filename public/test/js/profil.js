@@ -43,6 +43,12 @@ function getCurrentUser() {
     return null;
   }
 }
+function isAdmin() {
+  const token = localStorage.getItem("token");
+  const currentUser = getCurrentUser();
+
+  return !!token && currentUser?.role === "admin";
+}
 
 // ====================== COMMON FUNCTIONS ======================
 function toggleTheme() {
@@ -445,15 +451,26 @@ function renderProfileAnswers(container, answers, level = 0) {
       </p>
       <p>${answer.text}</p>
 
-      <div class="comment-actions">
-        <button onclick="showProfileReplyBox('${answer._id}')">Válasz</button>
-        ${isOwnAnswer
-        ? `
+      <div class="comment-card-top">
+        <div class="comment-actions">
+          <button onclick="showProfileReplyBox('${answer._id}')">Válasz</button>
+          ${isOwnAnswer
+            ? `
               <button onclick="showProfileEditAnswerBox('${answer._id}', event)">Szerkesztés</button>
               <button onclick="deleteProfileAnswer('${answer._id}', event)">Törlés</button>
             `
-        : ""
-      }
+            : ""
+          }
+        </div>
+
+        ${isAdmin() && !isOwnAnswer
+          ? `
+            <button class="admin-delete-btn admin-delete-answer-btn" onclick="adminDeleteProfileAnswer('${answer._id}', event)">
+              🔨
+            </button>
+          `
+          : ""
+        }
       </div>
 
       <div id="profile-edit-answer-${answer._id}"></div>
@@ -563,6 +580,26 @@ async function deleteProfileAnswer(answerId, event) {
     await openMyPost(currentProfilePostId);
   } catch (err) {
     alert(err.message || "Nem sikerült törölni a kommentet.");
+  }
+}
+
+async function adminDeleteProfileAnswer(answerId, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  if (!isAdmin()) return;
+
+  const confirmed = confirm("Biztosan törölni szeretnéd ezt a választ adminisztrátorként?");
+  if (!confirmed) return;
+
+  try {
+    await apiRequest(`/answers/${answerId}`, "DELETE");
+    await openMyPost(currentProfilePostId);
+    await loadProfileContent();
+  } catch (err) {
+    alert(err.message || "Nem sikerült törölni a választ.");
   }
 }
 

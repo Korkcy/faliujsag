@@ -285,3 +285,10 @@ A backend jelenleg támogatja:
 - A felhasználó nem tudja elmenteni a saját posztjait.
 - A lapozás, mostmár mindenhol működik.
 - Meg kell csinálni, hogy a mentésnél, ne töltsön mindig újra az oldal.
+
+## 2026-04-11 Kisebb, bugfix
+
+- A saját profil oldalon, a kommentjeim és mentett posztok fülnél, már kattintható a poszt létrehozójának a felhasználóneve, ami átirányít a profiljára.
+- Másik felhasználó profiljánál, egy megnyitott poszt modal-ján belül, mostmár változik a mentés gomb színe.
+- Mostmár ha ment a felhasználó egy posztot, vagy eltávolít egyet a mentettek közül, nem tölt újra az oldal.
+- A profil módosítás gomb mellé, implementálva lett egy "mégsem" gomb, ezzel be lehet zárni a módosítási felületet.
