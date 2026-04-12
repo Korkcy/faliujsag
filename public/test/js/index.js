@@ -113,6 +113,8 @@ async function adminDeletePost(postId, event) {
   }
 }
 
+
+
 async function adminDeleteAnswer(answerId, event) {
   if (event) {
     event.preventDefault();
@@ -355,6 +357,14 @@ async function openModal(postOrId) {
   } else {
     post = postOrId;
   }
+ document.getElementById("modal").style.display = "flex";
+
+  document.body.classList.add("modal-open"); // 👈 EZ
+
+  updateCommentUI();
+  await loadMyRating(post._id);
+  updateModalSaveButton(post._id);
+  updateModalAdminDeleteButton();
 
   currentPostId = post._id;
 
@@ -425,44 +435,51 @@ function renderAnswers(container, answers, level = 0) {
     wrapper.style.marginTop = "12px";
 
     wrapper.innerHTML = `
-      <p>
-        <strong>
-          ${authorId
-        ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${authorName}</a>`
-        : authorName
-      }
-        </strong>
-        • ${formatDate(answer.createdAt)}
-      </p>
-
-      <p id="answer-text-${answer._id}">${answer.text}</p>
-
-      <div class="comment-card-top">
-        <div class="comment-actions">
-          <button onclick="showReplyBox('${answer._id}')">Válasz</button>
-          ${
-            isOwnAnswer
-            ? `
-            <button onclick="showEditAnswerBox('${answer._id}', event)">Szerkesztés</button>
-            <button onclick="deleteAnswer('${answer._id}', event)">Törlés</button>
-            `
-            : ""
-          }
-        </div>
+  <div class="comment-header" onclick="toggleComment(this)">
+    <div>
+      <strong>
         ${
-          isAdmin() && !isOwnAnswer
-          ? `
-          <button class="admin-delete-btn admin-delete-answer-btn" onclick="adminDeleteAnswer('${answer._id}', event)">
-          🔨
-          </button>
-          `
-          : ""
+          authorId
+            ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${authorName}</a>`
+            : authorName
         }
-        </div>
+      </strong>
+      • ${formatDate(answer.createdAt)}
+    </div>
+    <span class="toggle-icon">▼</span>
+  </div>
 
-      <div id="edit-answer-${answer._id}"></div>
-      <div id="reply-${answer._id}"></div>
-    `;
+  <div class="comment-body">
+    <p id="answer-text-${answer._id}">${answer.text}</p>
+
+    <div class="comment-card-top">
+      <div class="comment-actions">
+        <button onclick="showReplyBox('${answer._id}')">Válasz</button>
+        ${
+          isOwnAnswer
+            ? `
+          <button onclick="showEditAnswerBox('${answer._id}', event)">Szerkesztés</button>
+          <button onclick="deleteAnswer('${answer._id}', event)">Törlés</button>
+        `
+            : ""
+        }
+      </div>
+      ${
+        isAdmin() && !isOwnAnswer
+          ? `
+        <button class="admin-delete-btn admin-delete-answer-btn" onclick="adminDeleteAnswer('${answer._id}', event)">
+          🔨
+        </button>
+      `
+          : ""
+      }
+    </div>
+
+    <div id="edit-answer-${answer._id}"></div>
+    <div id="reply-${answer._id}"></div>
+  </div>
+`;
+
 
     container.appendChild(wrapper);
 
@@ -475,6 +492,7 @@ function renderAnswers(container, answers, level = 0) {
 function closeModal(e) {
   if (!e || e.target.id === "modal") {
     document.getElementById("modal").style.display = "none";
+    document.body.classList.remove("modal-open"); // 👈 EZ
   }
 }
 
@@ -909,3 +927,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   await loadSavedPostIds();
   await loadPosts();
 });
+
+function toggleComment(el) {
+  const parent = el.closest(".answer-item");
+  parent.classList.toggle("collapsed");
+}
