@@ -47,6 +47,22 @@ function formatDate(dateString) {
   return date.toLocaleDateString("hu-HU");
 }
 
+function getRatingSummary(post) {
+  const average =
+    post.ratingsAverage !== null && post.ratingsAverage !== undefined
+      ? post.ratingsAverage.toFixed(1)
+      : "Nincs";
+
+  const helpful =
+    post.helpfulPercentage !== null && post.helpfulPercentage !== undefined
+      ? `${post.helpfulPercentage}%`
+      : "0%";
+
+  const quantity = post.ratingsQuantity || 0;
+
+  return `⭐ ${average} • 👍 ${helpful} hasznos (${quantity} értékelés)`;
+}
+
 function getAuthorName(post) {
   if (post.author && typeof post.author === "object") {
     return post.author.username || "Ismeretlen felhasználó";
@@ -307,14 +323,19 @@ async function loadPosts(searchTerm = currentSearchTerm, page = currentPage) {
 
   <p>${post.description}</p>
   <div class="post-meta">
-    <span>
-      👤 ${authorId
-            ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${getAuthorName(post)}</a>`
-            : getAuthorName(post)
-          }
-    </span>
-    <span>📅 ${formatDate(post.createdAt)}</span>
-    <span>💬 ${post.answersCount || 0} replies</span>
+    <div class="post-meta-left">
+      <span>👤 ${authorId
+        ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${getAuthorName(post)}</a>`
+        : getAuthorName(post)
+      }</span>
+
+      <span>📅 ${formatDate(post.createdAt)}</span>
+      <span>💬 ${post.answersCount || 0} replies</span>
+    </div>
+
+    <div class="post-meta-right">
+      ${getRatingSummary(post)}
+    </div>
   </div>
 `;
 
@@ -357,14 +378,6 @@ async function openModal(postOrId) {
   } else {
     post = postOrId;
   }
- document.getElementById("modal").style.display = "flex";
-
-  document.body.classList.add("modal-open"); // 👈 EZ
-
-  updateCommentUI();
-  await loadMyRating(post._id);
-  updateModalSaveButton(post._id);
-  updateModalAdminDeleteButton();
 
   currentPostId = post._id;
 
@@ -407,6 +420,7 @@ async function openModal(postOrId) {
   }
 
   document.getElementById("modal").style.display = "flex";
+  document.body.classList.add("modal-open");
   updateCommentUI();
   await loadMyRating(post._id);
   updateModalSaveButton(post._id);

@@ -286,9 +286,20 @@ A backend jelenleg támogatja:
 - A lapozás, mostmár mindenhol működik.
 - Meg kell csinálni, hogy a mentésnél, ne töltsön mindig újra az oldal.
 
-## 2026-04-11 Kisebb, bugfix
+## 2026-04-11 Kisebb bugfix és admin role első verzió
 
 - A saját profil oldalon, a kommentjeim és mentett posztok fülnél, már kattintható a poszt létrehozójának a felhasználóneve, ami átirányít a profiljára.
 - Másik felhasználó profiljánál, egy megnyitott poszt modal-ján belül, mostmár változik a mentés gomb színe.
 - Mostmár ha ment a felhasználó egy posztot, vagy eltávolít egyet a mentettek közül, nem tölt újra az oldal.
 - A profil módosítás gomb mellé, implementálva lett egy "mégsem" gomb, ezzel be lehet zárni a módosítási felületet.
+- Elkészült az adminisztrátori rendszer első verziója.
+- Az admin képes bármelyik posztot vagy választ törölni.
+- Az admin törlési gombjai a főoldali modalban, más profilján megnyitott modalban és a saját profilon megnyitott poszt modalban elérhetőek.
+- Az admin funkciók eléréséhez is bejelentkezés szükséges.
+
+## 2026-04-18 Email protekció, értékelések megjelenítése és bemutatkozás fül
+
+- Más felhasználók profilján ezentúl nem jelenik meg az email címe a felhasználónak.
+- A profil oldalra került egy bemutatkozás fül, ahol a felhasználó leírhat különböző adatokat saját magáról.
+- A bemutatkozás más felhasználók profiljánál is látható.
+- Most már megjelennek az átlagos értékelések, értékelési mennyiségek és hasznossági százalékok a főoldal posztjainál.

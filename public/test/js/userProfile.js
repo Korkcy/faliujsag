@@ -276,11 +276,11 @@ async function loadViewedUserProfile() {
     const userRes = await apiRequest(`/users/${userId}`, "GET");
     const user = userRes.data.user;
 
-    document.getElementById("email").value = user.email || "";
     document.getElementById("username").value = user.username || "";
     document.getElementById("school").value = user.school || "";
     document.getElementById("profileImage").src =
       user.profilePicture || "https://i.pravatar.cc/120";
+    document.getElementById("bio").value = user.bio || "";
 
     const postsRes = await apiRequest(`/posts/user/${userId}`, "GET");
     viewedUserPosts = postsRes.data.posts || [];

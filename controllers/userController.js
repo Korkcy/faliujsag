@@ -24,7 +24,7 @@ exports.getMe = async (req, res, next) => {
 
 exports.updateMe = async (req, res, next) => {
     try {
-        const {email, username, school, profilePicture} = req.body;
+        const {email, username, school, profilePicture, bio} = req.body;
 
         const updateUser = await User.findByIdAndUpdate(
             req.user._id,
@@ -32,7 +32,8 @@ exports.updateMe = async (req, res, next) => {
                 email,
                 username,
                 school,
-                profilePicture
+                profilePicture,
+                bio
             },
             {
                 new: true,
