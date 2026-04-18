@@ -44,6 +44,13 @@ const postSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    helpfulPercentage: {
+        type: Number,
+        default: 0,
+        min: [0, 'A hasznossági százalék nem lehet kisebb mint 0'],
+        max: [100, 'A hasznossági százalék nem lehet nagyobb mint 100'],
+        set: val => Math.round(val)
+    },
     ratings:[ratingSchema],
     answersCount: {
         type: Number,

@@ -128,6 +128,7 @@ function enableEditMode() {
   document.getElementById("email").disabled = false;
   document.getElementById("username").disabled = false;
   document.getElementById("school").disabled = false;
+  document.getElementById("bio").disabled = false;
 
   document.getElementById("saveProfileBtn").style.display = "block";
   document.getElementById("cancelEditProfileBtn").style.display = "inline-block";
@@ -141,6 +142,7 @@ function cancelEditMode() {
   document.getElementById("email").disabled = true;
   document.getElementById("username").disabled = true;
   document.getElementById("school").disabled = true;
+  document.getElementById("bio").disabled = true;
 
   document.getElementById("saveProfileBtn").style.display = "none";
 
@@ -162,6 +164,7 @@ async function loadProfile() {
     document.getElementById("email").value = user.email || "";
     document.getElementById("username").value = user.username || "";
     document.getElementById("school").value = user.school || "";
+    document.getElementById("bio").value = user.bio || "";
 
     const profileImage = document.getElementById("profileImage");
     profileImage.src = user.profilePicture || "https://i.pravatar.cc/120";
@@ -178,6 +181,7 @@ async function saveProfile() {
   const username = document.getElementById("username").value.trim();
   const school = document.getElementById("school").value.trim();
   const profilePicture = document.getElementById("profilePicture").value.trim();
+  const bio = document.getElementById("bio").value.trim();
 
   try {
     const res = await apiRequest("/users/me", "PATCH", {
@@ -185,6 +189,7 @@ async function saveProfile() {
       username,
       school,
       profilePicture,
+      bio,
     });
 
     const updatedUser = res.data.user;
@@ -198,6 +203,7 @@ async function saveProfile() {
     document.getElementById("email").disabled = true;
     document.getElementById("username").disabled = true;
     document.getElementById("school").disabled = true;
+    document.getElementById("bio").disabled = true;
 
     document.getElementById("saveProfileBtn").style.display = "none";
     document.getElementById("cancelEditProfileBtn").style.display = "none";

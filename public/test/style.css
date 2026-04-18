@@ -540,6 +540,22 @@ html.dark .filters button:hover {
   color: var(--text);
 }
 
+.profile-row textarea {
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100px;
+  resize: vertical;
+  font-family: Arial, sans-serif;
+}
+
+.profile-row textarea:disabled {
+  opacity: 0.75;
+  cursor: default;
+}
+
 /* Password box teljes szélességű legyen */
 .password-box {
   display: flex;
@@ -646,6 +662,31 @@ html.dark .filters button:hover {
   padding: 6px 10px;
   border-radius: 8px;
   cursor: pointer;
+}
+
+.post-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 8px;
+  flex-wrap: nowrap;
+}
+
+.post-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.post-meta-right {
+  margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+  text-align: right;
 }
 
 .nav-right button {

@@ -46,6 +46,11 @@ const userSchema = new mongoose.Schema({
     school: {
         type: String
     },
+    bio: {
+        type: String,
+        trim: true,
+        maxlength: [300, 'A bemutatkozás legfeljebb 300 karakter lehet']
+    },
     savedPosts: [
         {
             type: mongoose.Schema.Types.ObjectId,

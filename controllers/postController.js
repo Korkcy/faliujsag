@@ -47,13 +47,13 @@ exports.getAllPosts = async (req, res, next) => {
       const sortValue = Array.isArray(req.query.sort)
         ? req.query.sort[0]
         : req.query.sort;
-      
+
       if (sortValue === "newest") {
-        sortOption = { createdAt: -1};
+        sortOption = { createdAt: -1 };
       } else if (sortValue === "answers") {
-        sortOption = { answersCount: -1};
+        sortOption = { answersCount: -1 };
       } else if (sortValue === "rated") {
-        sortOption = { ratingsAverage: -1};
+        sortOption = { ratingsAverage: -1 };
       } else {
         return next(
           new AppError(
@@ -86,7 +86,7 @@ exports.getAllPosts = async (req, res, next) => {
       results: posts.length,
       totalResults: totalPosts,
       currentPage: page,
-      totalPages: Math.ceil(totalPosts/limit),
+      totalPages: Math.ceil(totalPosts / limit),
       data: {
         posts
       },
@@ -120,10 +120,10 @@ exports.getPost = async (req, res, next) => {
 
 exports.getMyPosts = async (req, res, next) => {
   try {
-    const posts = await Post.find({author: req.user._id})
-      .sort({createdAt: -1})
+    const posts = await Post.find({ author: req.user._id })
+      .sort({ createdAt: -1 })
       .populate("author", "username school profilePicture role");
-    
+
     res.status(200).json({
       status: "success",
       results: posts.length,
@@ -138,8 +138,8 @@ exports.getMyPosts = async (req, res, next) => {
 
 exports.getPostsByUserId = async (req, res, next) => {
   try {
-    const posts = await Post.find({author: req.params.id})
-      .sort({createdAt: -1})
+    const posts = await Post.find({ author: req.params.id })
+      .sort({ createdAt: -1 })
       .populate("author", "username school profilePicture role");
 
     res.status(200).json({
@@ -199,7 +199,7 @@ exports.deletePost = async (req, res, next) => {
 
 exports.ratePost = async (req, res, next) => {
   try {
-    const {helpful, score} = req.body;
+    const { helpful, score } = req.body;
 
     if (typeof helpful !== "boolean") {
       return next(new AppError("A helpful mező kötelező és true/false értékű kell legyen", 400));
@@ -234,6 +234,19 @@ exports.ratePost = async (req, res, next) => {
       });
     }
 
+    post.ratingsQuantity = post.ratings.length;
+
+    if (post.ratings.length > 0) {
+      const totalScore = post.ratings.reduce((sum, rating) => sum + rating.score, 0);
+      const helpfulCount = post.ratings.filter((rating) => rating.helpful === true).length;
+
+      post.ratingsAverage = totalScore / post.ratings.length;
+      post.helpfulPercentage = (helpfulCount / post.ratings.length) * 100;
+    } else {
+      post.ratingsAverage = null;
+      post.helpfulPercentage = 0;
+    }
+
     calcRatingStats(post);
     await post.save();
 
@@ -255,7 +268,7 @@ exports.getMyRatingForPost = async (req, res, next) => {
   try {
     const post = await Post.findById(req.params.id);
 
-    if(!post){
+    if (!post) {
       return next(new AppError("Nincs ilyen poszt", 404));
     }
 

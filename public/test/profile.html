@@ -48,7 +48,8 @@
 
                     <div class="profile-header-actions">
                         <button type="button" id="editProfileBtn" onclick="enableEditMode()">Edit profile</button>
-                        <button type="button" id="cancelEditProfileBtn" onclick="cancelEditMode()" style="display:none;">Mégsem</button>
+                        <button type="button" id="cancelEditProfileBtn" onclick="cancelEditMode()"
+                            style="display:none;">Mégsem</button>
                     </div>
                 </div>
 
@@ -72,6 +73,12 @@
                     <div class="profile-row">
                         <label>School</label>
                         <input type="text" id="school" disabled>
+                    </div>
+
+                    <div class="profile-row">
+                        <label>Bemutatkozás</label>
+                        <textarea id="bio" disabled maxlength="300"
+                            placeholder="Írj pár mondatot magadról..."></textarea>
                     </div>
 
                     <button class="save-profile" id="saveProfileBtn" onclick="saveProfile()" style="display:none;">
