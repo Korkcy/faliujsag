@@ -24,6 +24,10 @@ exports.protect = async (req, res, next) => {
             return next(new AppError('A tokenhez tartozó felhasználó nem létezik', 401));
         };
 
+        if (currentUser.isBanned) {
+            return next(new AppError('Ez a felhasználó ki van tiltva', 403));
+        }
+
         req.user = currentUser; 
 
         next();

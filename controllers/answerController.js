@@ -2,6 +2,25 @@ const Answer = require("../models/answerModel");
 const Post = require("../models/postModel");
 const AppError = require("../utils/appError");
 
+exports.getAllAnswers = async (req, res, next) => {
+  try {
+    const answers = await Answer.find()
+      .populate("author", "username")
+      .populate("post", "title")
+      .sort("-createdAt");
+
+    res.status(200).json({
+      status: "success",
+      results: answers.length,
+      data: {
+        answers
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.getAnswersByPost = async (req, res, next) => {
   try {
     const { postId } = req.params;

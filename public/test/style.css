@@ -317,14 +317,6 @@ html.dark .filters button:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.post-meta {
-  display: flex;
-  gap: 15px;
-  font-size: 12px;
-  opacity: 0.7;
-  margin-top: 10px;
-}
-
 /* CREATE MODAL */
 #createModal {
   display: none;
@@ -675,6 +667,9 @@ html.dark .user-post {
   gap: 16px;
   padding-top: 8px;
   flex-wrap: nowrap;
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 10px;
 }
 
 .post-meta-left {

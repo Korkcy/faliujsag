@@ -26,9 +26,17 @@ async function apiRequest(endpoint, method = "GET", data = null) {
     result = await response.json();
   }
 
-  if (!response.ok) {
-    throw new Error(result?.message || "Hiba történt.");
-  }
+   if (!response.ok) {
+        if (response.status === 403 && result?.message?.includes("ki van tiltva")) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            alert("Ez a felhasználó ki van tiltva.");
+            window.location.href = "login.html";
+            return;
+        }
+
+        throw new Error(result?.message || "Hiba történt.");
+    }
 
   return result;
 }

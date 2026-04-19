@@ -303,3 +303,16 @@ A backend jelenleg támogatja:
 - A profil oldalra került egy bemutatkozás fül, ahol a felhasználó leírhat különböző adatokat saját magáról.
 - A bemutatkozás más felhasználók profiljánál is látható.
 - Most már megjelennek az átlagos értékelések, értékelési mennyiségek és hasznossági százalékok a főoldal posztjainál.
+
+## 2026-04-19 Admin panel
+
+- Az admin panel, egy külön, csak az adminisztrátor jogosultsággal rendelkező felhasználók érhetnek el.
+- Az adminok itt poszotkat, kommenteket és felhasználókat kezelhetnek.
+- Tab alapú navigáció van, 3 fül közül választhatnak az adminok, Posztok, Kommentek, Felhasználók.
+- Mindegyik tab a hozzá tartozó összes elemet listázza ki.
+- Az admin a posztokat törölheti, akár csak a főoldalon.
+- A kommenteket is törölheti, itt viszont mivel minden komment megjelenik, ezért láthatja a poszt címét, amihez a komment tartozik.
+- A felhasználóknál pedig lehetősége van kitiltani és feloldani.
+- Ha egy felhasználó kitiltásra kerül, akkor nem érheti el az oldalt, ha pedig éppen be van jelentkezve, akkor kijelentkezteti őt az oldal és törli a localStorage tartalmát.
+- Fontos, hogy az admin, nem tud másik admin fiókot törölni.
+- Az admin képes a felhasználók között keresni is.
