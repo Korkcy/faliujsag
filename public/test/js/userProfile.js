@@ -69,11 +69,16 @@ function renderNavbar() {
   if (token) {
     navRight.innerHTML = `
       <div class="profile-menu">
-        <div class="profile-icon" id="profileIcon">👤</div>
+        <div class="profile-icon" onclick="toggleDropdown()">👤</div>
+
         <div class="dropdown" id="dropdown">
           <a href="profile.html">Profil</a>
+          <br>
+          ${isAdmin() ? `<a href="admin.html">Admin</a>` : ""}
           <hr>
-          <button id="logoutBtn" class="logout-btn">Kijelentkezés</button>
+          <button onclick="logout()" type="button" class="logout-btn">
+            Kijelentkezés
+          </button>
         </div>
       </div>
     `;

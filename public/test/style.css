@@ -645,10 +645,14 @@ html.dark .filters button:hover {
 }
 
 .user-post {
-  background: var(--bg);
+  background: #c9ccd1;
   padding: 15px;
   border-radius: 10px;
   margin-bottom: 10px;
+}
+
+html.dark .user-post {
+  background: #000;
 }
 
 .post-actions {
@@ -1028,12 +1032,16 @@ html:not(.dark) .profile-tab:hover {
 }
 
 .profile-post-card {
-  background: var(--bg);
+  background: #c9ccd1;
   padding: 15px;
   border-radius: 10px;
   margin-bottom: 12px;
   cursor: pointer;
   transition: 0.2s;
+}
+
+html.dark .profile-post-card {
+  background: #000;
 }
 
 .profile-post-card:hover {
@@ -1158,4 +1166,48 @@ html:not(.dark) .profile-tab:hover {
 
 .answer-item.collapsed .toggle-icon {
   transform: rotate(-90deg);
+}
+
+#adminSubtitle {
+  color: #bdbdbd;
+  margin-top: 6px;
+  margin-bottom: 18px;
+}
+
+.post-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.post-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.post-meta-left span {
+  white-space: nowrap;
+}
+
+.post-meta-left span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.post-meta-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  white-space: nowrap;
+  margin-left: auto;
 }

@@ -887,10 +887,12 @@ function renderNavbar() {
 
         <div class="dropdown" id="dropdown">
           <a href="profile.html">Profil</a>
+          <br>
+          ${isAdmin() ? `<a href="admin.html">Admin</a>` : ""}
           <hr>
           <button onclick="logout()" type="button" class="logout-btn">
             Kijelentkezés
-        </button>
+          </button>
         </div>
       </div>
     `;
