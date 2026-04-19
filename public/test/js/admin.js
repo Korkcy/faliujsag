@@ -27,6 +27,14 @@ async function apiRequest(endpoint, method = "GET", data = null) {
     }
 
     if (!response.ok) {
+        if (response.status === 403 && result?.message?.includes("ki van tiltva")) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            alert("Ez a felhasználó ki van tiltva.");
+            window.location.href = "login.html";
+            return;
+        }
+
         throw new Error(result?.message || "Hiba történt.");
     }
 
@@ -136,6 +144,69 @@ async function adminDeletePost(postId, event) {
     }
 }
 
+async function adminDeleteAnswer(answerId, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    const confirmed = confirm("Biztosan törölni szeretnéd ezt a kommentet?");
+    if (!confirmed) return;
+
+    try {
+        await apiRequest(`/answers/${answerId}`, "DELETE");
+
+        adminComments = adminComments.filter((answer) => answer._id !== answerId);
+        renderAdminContent();
+    } catch (err) {
+        alert(err.message || "Nem sikerült törölni a kommentet.");
+    }
+}
+
+async function adminBanUser(userId, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    const confirmed = confirm("Biztosan ki szeretnéd tiltani ezt a felhasználót?");
+    if (!confirmed) return;
+
+    try {
+        await apiRequest(`/users/${userId}/ban`, "PATCH");
+
+        adminUsers = adminUsers.map((user) =>
+            user._id === userId ? { ...user, isBanned: true } : user
+        );
+
+        renderAdminContent();
+    } catch (err) {
+        alert(err.message || "Nem sikerült kitiltani a felhasználót.");
+    }
+}
+
+async function adminUnbanUser(userId, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    const confirmed = confirm("Biztosan fel szeretnéd oldani a kitiltást?");
+    if (!confirmed) return;
+
+    try {
+        await apiRequest(`/users/${userId}/unban`, "PATCH");
+
+        adminUsers = adminUsers.map((user) =>
+            user._id === userId ? { ...user, isBanned: false } : user
+        );
+
+        renderAdminContent();
+    } catch (err) {
+        alert(err.message || "Nem sikerült feloldani a kitiltást.");
+    }
+}
+
 function renderNavbar() {
     const navRight = document.getElementById("navRight");
     if (!navRight) return;
@@ -178,6 +249,7 @@ function renderNavbar() {
 let adminPosts = [];
 let adminComments = [];
 let adminUsers = [];
+let adminUserSearchTerm = "";
 
 let currentAdminView = "posts";
 let currentAdminPage = 1;
@@ -192,11 +264,12 @@ function setAdminView(view) {
     currentAdminView = view;
     currentAdminPage = 1;
     updateAdminTabs();
+    updateAdminSearchVisibility();
     loadAdminContent();
 }
 
 function updateAdminTabs() {
-    const tabs = document.querySelectorAll(".profile-tab");
+    const tabs = document.querySelectorAll(".admin-tab");
     tabs.forEach((tab) => tab.classList.remove("active"));
 
     const viewToIndex = {
@@ -207,6 +280,13 @@ function updateAdminTabs() {
 
     const activeTab = tabs[viewToIndex[currentAdminView]];
     if (activeTab) activeTab.classList.add("active");
+}
+
+function updateAdminSearchVisibility() {
+    const searchRow = document.getElementById("adminUserSearchRow");
+    if (!searchRow) return;
+
+    searchRow.style.display = currentAdminView === "users" ? "block" : "none";
 }
 
 function goToPreviousAdminPage() {
@@ -241,9 +321,15 @@ async function loadAdminContent() {
             const res = await apiRequest("/posts?limit=1000&sort=newest");
             adminPosts = res.data.posts || [];
         } else if (currentAdminView === "comments") {
-            adminComments = [];
+            const res = await apiRequest("/answers");
+            adminComments = res.data.answers || [];
         } else if (currentAdminView === "users") {
-            adminUsers = [];
+            const query = adminUserSearchTerm.trim()
+                ? `/users?search=${encodeURIComponent(adminUserSearchTerm.trim())}`
+                : "/users";
+
+            const res = await apiRequest(query);
+            adminUsers = res.data.users || [];
         }
 
         renderAdminContent();
@@ -288,16 +374,21 @@ function renderAdminContent() {
 
     if (paginatedItems.length === 0) {
         if (currentAdminView === "posts") {
-            container.innerHTML = `<p class="profile-empty">Még nincs betölthető admin posztlista.</p>`;
+            container.innerHTML = `<p class="admin-empty">Még nincs betölthető admin posztlista.</p>`;
         } else if (currentAdminView === "comments") {
-            container.innerHTML = `<p class="profile-empty">A komment admin nézet backendje még nincs bekötve.</p>`;
+            container.innerHTML = `<p class="admin-empty">A komment admin nézet backendje még nincs bekötve.</p>`;
         } else {
-            container.innerHTML = `<p class="profile-empty">A felhasználó admin nézet backendje még nincs bekötve.</p>`;
+            container.innerHTML = `<p class="admin-empty">A felhasználó admin nézet backendje még nincs bekötve.</p>`;
         }
     } else {
         paginatedItems.forEach((item) => {
             const div = document.createElement("div");
-            div.className = currentAdminView === "posts" ? "post" : "profile-post-card";
+            div.className =
+                currentAdminView === "posts"
+                    ? "admin-post-card"
+                    : currentAdminView === "comments"
+                        ? "admin-comment-card"
+                        : "admin-user-card";
 
             if (currentAdminView === "posts") {
                 const authorName =
@@ -306,42 +397,110 @@ function renderAdminContent() {
                         : "Ismeretlen felhasználó";
 
                 div.innerHTML = `
-    <div class="post-card-top">
-      <h3>${item.title || ""}</h3>
+  <div class="admin-post-top">
+    <h3>${item.title || ""}</h3>
 
-      <button
-        type="button"
-        class="admin-delete-btn"
-        onclick="adminDeletePost('${item._id}', event)"
-      >
-        🔨
-      </button>
+    <button
+      type="button"
+      class="admin-delete-btn"
+      onclick="adminDeletePost('${item._id}', event)"
+    >
+      🔨
+    </button>
+  </div>
+
+  <p>${item.description || ""}</p>
+
+  <div class="admin-post-meta">
+    <div class="admin-post-meta-left">
+      <span>👤 ${authorName}</span>
+      <span>📅 ${formatDate(item.createdAt)}</span>
+      <span>💬 ${item.answersCount || 0} replies</span>
     </div>
 
-    <p>${item.description || ""}</p>
+    <div class="admin-post-meta-right">
+      ${getRatingSummary(item)}
+    </div>
+  </div>
+`;
+            } else if (currentAdminView === "comments") {
+                const authorName =
+                    item.author && typeof item.author === "object"
+                        ? item.author.username || "Ismeretlen felhasználó"
+                        : "Ismeretlen felhasználó";
 
-    <div class="post-meta">
-      <div class="post-meta-left">
+                const postTitle =
+                    item.post && typeof item.post === "object"
+                        ? item.post.title || "Ismeretlen poszt"
+                        : "Ismeretlen poszt";
+
+                div.innerHTML = `
+      <div class="admin-comment-top">
+        <h3>${postTitle}</h3>
+
+        <button
+          type="button"
+          class="admin-delete-btn"
+          onclick="adminDeleteAnswer('${item._id}', event)"
+        >
+          🔨
+        </button>
+      </div>
+
+      <p>${item.text || ""}</p>
+
+      <div class="admin-comment-meta">
         <span>👤 ${authorName}</span>
         <span>📅 ${formatDate(item.createdAt)}</span>
-        <span>💬 ${item.answersCount || 0} replies</span>
       </div>
-
-      <div class="post-meta-right">
-        ${getRatingSummary(item)}
-      </div>
-    </div>
-  `;
-            } else if (currentAdminView === "comments") {
-                div.innerHTML = `
-          <h3>Komment</h3>
-          <p>${item.text || ""}</p>
-        `;
+    `;
             } else if (currentAdminView === "users") {
                 div.innerHTML = `
-          <h3>${item.username || "Ismeretlen felhasználó"}</h3>
-          <p>${item.email || ""}</p>
-        `;
+  <div class="admin-post-top">
+    <h3>${item.username || "Ismeretlen felhasználó"}</h3>
+
+    ${item.role !== "admin"
+                        ? item.isBanned
+                            ? `
+            <button
+              type="button"
+              class="admin-unban-btn"
+              onclick="adminUnbanUser('${item._id}', event)"
+              title="Kitiltás feloldása"
+            >
+              😇
+            </button>
+          `
+                            : `
+            <button
+              type="button"
+              class="admin-delete-btn"
+              onclick="adminBanUser('${item._id}', event)"
+              title="Kitiltás"
+            >
+              🔨
+            </button>
+          `
+                        : ""
+                    }
+  </div>
+
+  <p>${item.email || ""}</p>
+
+  <div class="admin-post-meta">
+    <div class="admin-post-meta-left">
+      <span>🏫 ${item.school || "Nincs megadva"}</span>
+      <span>🛡️ ${item.role || "user"}</span>
+    </div>
+
+    <div class="admin-post-meta-right">
+      ${item.isBanned
+                        ? `<span style="color:#e74c3c; font-weight:bold;">Kitiltva</span>`
+                        : `<span>Aktív</span>`
+                    }
+    </div>
+  </div>
+`;
             }
 
             container.appendChild(div);
@@ -445,6 +604,19 @@ window.addEventListener("DOMContentLoaded", async () => {
         nextBtn.addEventListener("click", goToNextAdminPage);
     }
 
+    const adminUserSearchInput = document.getElementById("adminUserSearchInput");
+
+    if (adminUserSearchInput) {
+        adminUserSearchInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                adminUserSearchTerm = adminUserSearchInput.value.trim();
+                currentAdminPage = 1;
+                loadAdminContent();
+            }
+        });
+    }
+
     updateAdminTabs();
     loadAdminContent();
+    updateAdminSearchVisibility();
 });

@@ -48,6 +48,10 @@ exports.login = async (req,res,next)=>{
             return next(new AppError('Hibás email vagy jelszó', 401));
         }
 
+        if (user.isBanned) {
+            return next(new AppError('Ez a felhasználó ki van tiltva', 403));
+        }
+
         const token = signToken(user._id);
 
         res.status(200).json({

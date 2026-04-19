@@ -3,6 +3,89 @@ const Post = require('../models/postModel');
 const AppError = require('../utils/appError');
 const bcrypt = require('bcrypt');
 
+exports.getAllUsers = async (req, res, next) => {
+    try {
+        const { search } = req.query;
+
+        const filter = {};
+
+        if (search && search.trim()) {
+            filter.$or = [
+                { username: { $regex: search.trim(), $options: "i" } },
+                { email: { $regex: search.trim(), $options: "i" } }
+            ];
+        }
+
+        const users = await User.find(filter)
+            .sort({ createdAt: -1 })
+            .select("username email school role isBanned profilePicture createdAt");
+
+        res.status(200).json({
+            status: "success",
+            results: users.length,
+            data: {
+                users
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.banUser = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const user = await User.findById(id);
+
+        if (!user) {
+            return next(new AppError("A felhasználó nem található", 404));
+        }
+
+        if (user.role === "admin") {
+            return next(new AppError("Admin felhasználó nem tiltható ki", 400));
+        }
+
+        user.isBanned = true;
+        await user.save({ validateBeforeSave: false });
+
+        res.status(200).json({
+            status: "success",
+            message: "Felhasználó sikeresen kitiltva",
+            data: {
+                user
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.unbanUser = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const user = await User.findById(id);
+
+        if (!user) {
+            return next(new AppError("A felhasználó nem található", 404));
+        }
+
+        user.isBanned = false;
+        await user.save({ validateBeforeSave: false });
+
+        res.status(200).json({
+            status: "success",
+            message: "Felhasználó kitiltása feloldva",
+            data: {
+                user
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
 exports.getMe = async (req, res, next) => {
     try {
         const user = await User.findById(req.user._id).select("+password");

@@ -11,8 +11,8 @@
       document.documentElement.classList.add("dark");
     }
   </script>
-
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="admin.css" />
 </head>
 
 <body>
@@ -37,25 +37,30 @@
   </nav>
 
   <div class="container">
-    <div class="profile-page">
-      <div class="profile-card">
+    <div class="admin-page">
+      <div class="admin-card">
 
-        <div class="profile-info">
+        <div class="admin-header">
           <h2>Admin panel</h2>
           <p id="adminSubtitle">Oldalkezelő felület</p>
         </div>
 
-        <div class="profile-posts">
-          <div class="profile-tabs">
-            <button type="button" class="profile-tab active" onclick="setAdminView('posts')">
+        <div class="admin-section">
+          <div class="admin-tabs">
+            <button type="button" class="admin-tab active" onclick="setAdminView('posts')">
               Posztok
             </button>
-            <button type="button" class="profile-tab" onclick="setAdminView('comments')">
+            <button type="button" class="admin-tab" onclick="setAdminView('comments')">
               Kommentek
             </button>
-            <button type="button" class="profile-tab" onclick="setAdminView('users')">
+            <button type="button" class="admin-tab" onclick="setAdminView('users')">
               Felhasználók
             </button>
+          </div>
+
+          <div class="admin-search-row" id="adminUserSearchRow" style="display: none;">
+            <input type="text" id="adminUserSearchInput" class="admin-search-input"
+              placeholder="Keresés felhasználóra..." />
           </div>
 
           <div id="adminContent"></div>

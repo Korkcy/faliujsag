@@ -1,0 +1,270 @@
+.admin-page {
+  width: 600px;
+}
+
+.admin-card {
+  background: var(--card);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.admin-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.admin-header h2 {
+  margin: 0;
+}
+
+#adminSubtitle {
+  color: #bdbdbd;
+  margin: 0;
+}
+
+.admin-section {
+  background: var(--card);
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+#adminContent {
+  width: 100%;
+  min-height: 120px;
+}
+
+.admin-tabs {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  background: var(--bg);
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  padding: 18px 12px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s;
+  position: relative;
+}
+
+.admin-tab:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+html:not(.dark) .admin-tab:not(:last-child) {
+  border-right: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.admin-tab:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+html:not(.dark) .admin-tab:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.admin-tab.active {
+  font-weight: bold;
+  background: rgba(74, 144, 226, 0.12);
+}
+
+.admin-empty {
+  opacity: 0.8;
+  padding: 10px 0;
+}
+
+/* POSZT KÁRTYA */
+.admin-post-card {
+  width: 100%;
+  background: #c9ccd1;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+html.dark .admin-post-card {
+  background: #000;
+}
+
+.admin-post-card h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.admin-post-card p {
+  margin-bottom: 14px;
+}
+
+.admin-post-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.admin-post-top h3 {
+  flex: 1;
+  margin: 0 0 10px 0;
+}
+
+.admin-post-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.admin-post-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+  flex: 1 1 320px;
+}
+
+.admin-post-meta-left span {
+  white-space: nowrap;
+}
+
+.admin-post-meta-right {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.admin-post-meta-right {
+  color: #d6d6d6;
+}
+
+html:not(.dark) .admin-post-meta-right {
+  color: #444;
+}
+
+/* COMMENT / USER CARD */
+.admin-comment-card,
+.admin-user-card {
+  width: 100%;
+  background: #c9ccd1;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+html.dark .admin-comment-card,
+html.dark .admin-user-card {
+  background: #000;
+}
+
+.admin-comment-card h3,
+.admin-user-card h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.admin-comment-card p,
+.admin-user-card p {
+  margin-bottom: 0;
+}
+
+.admin-comment-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.admin-comment-top h3 {
+  flex: 1;
+  margin: 0 0 10px 0;
+}
+
+.admin-comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+/* SEARCH BAR */
+
+.admin-search-row {
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.admin-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border-radius: 20px;
+  border: none;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+}
+
+/* USER CARD */
+
+.admin-user-card .admin-post-meta,
+.admin-comment-card .admin-comment-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.admin-user-card .admin-post-meta-left,
+.admin-user-card .admin-post-meta-right,
+.admin-comment-card .admin-comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* UNBAN */
+
+.admin-unban-btn {
+  background: #1f7a3a;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-unban-btn:hover {
+  background: #2ea84f;
+}
