@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin panel</title>
+
+  <script>
+    if (localStorage.getItem("theme") === "dark") {
+      document.documentElement.classList.add("dark");
+    }
+  </script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <canvas id="stars"></canvas>
+
+  <nav class="navbar">
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <div id="icon">🌙</div>
+    </div>
+
+    <div class="nav-center">
+      <div class="nav-center">
+        <div class="image-container">
+          <a href="index.html">
+            <img src="./kepek/tabla.png" alt="Faliújság" class="register-image">
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-right" id="navRight"></div>
+  </nav>
+
+  <div class="container">
+    <div class="profile-page">
+      <div class="profile-card">
+
+        <div class="profile-info">
+          <h2>Admin panel</h2>
+          <p id="adminSubtitle">Oldalkezelő felület</p>
+        </div>
+
+        <div class="profile-posts">
+          <div class="profile-tabs">
+            <button type="button" class="profile-tab active" onclick="setAdminView('posts')">
+              Posztok
+            </button>
+            <button type="button" class="profile-tab" onclick="setAdminView('comments')">
+              Kommentek
+            </button>
+            <button type="button" class="profile-tab" onclick="setAdminView('users')">
+              Felhasználók
+            </button>
+          </div>
+
+          <div id="adminContent"></div>
+
+          <div class="pagination" id="adminPagination">
+            <button type="button" id="adminPrevPageBtn">Előző</button>
+            <span id="adminPageInfo">1 / 1</span>
+            <button type="button" id="adminNextPageBtn">Következő</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="./js/admin.js"></script>
+</body>
+
+</html>
