@@ -438,19 +438,17 @@ function goToUserProfile(userId, event) {
 
 function renderProfileAnswers(container, answers, level = 0) {
   const currentUser = getCurrentUser();
+  const currentUserId = currentUser?._id || currentUser?.id;
 
   answers.forEach((answer) => {
-    const authorName =
-      answer.author && typeof answer.author === "object"
-        ? answer.author.username
-        : "Ismeretlen felhasználó";
+    const authorName = answer.author && typeof answer.author === "object"
+      ? answer.author.username
+      : "Ismeretlen felhasználó";
 
-    const authorId =
-      answer.author && typeof answer.author === "object"
-        ? answer.author._id
-        : null;
+    const authorId = answer.author && typeof answer.author === "object"
+      ? answer.author._id
+      : null;
 
-    const currentUserId = currentUser?._id || currentUser?.id;
     const isOwnAnswer = currentUserId && authorId === currentUserId;
 
     const wrapper = document.createElement("div");
@@ -459,41 +457,40 @@ function renderProfileAnswers(container, answers, level = 0) {
     wrapper.style.marginTop = "12px";
 
     wrapper.innerHTML = `
-      <p>
-        <strong>
-          ${authorId
-        ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${authorName}</a>`
-        : authorName
-      }
-        </strong>
-        • ${new Date(answer.createdAt).toLocaleDateString("hu-HU")}
-      </p>
-      <p>${answer.text}</p>
+      <div class="comment-header" onclick="toggleComment(this)">
+        <div>
+          <strong>
+            ${authorId 
+              ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${authorName}</a>` 
+              : authorName}
+          </strong>
+          • ${new Date(answer.createdAt).toLocaleDateString("hu-HU")}
+        </div>
+        <span class="toggle-icon">▼</span>
+      </div>
 
-      <div class="comment-card-top">
-        <div class="comment-actions">
-          <button onclick="showProfileReplyBox('${answer._id}')">Válasz</button>
-          ${isOwnAnswer
-            ? `
+      <div class="comment-body">
+        <p>${answer.text}</p>
+
+        <div class="comment-card-top">
+          <div class="comment-actions">
+            <button onclick="showProfileReplyBox('${answer._id}')">Válasz</button>
+            ${isOwnAnswer ? `
               <button onclick="showProfileEditAnswerBox('${answer._id}', event)">Szerkesztés</button>
               <button onclick="deleteProfileAnswer('${answer._id}', event)">Törlés</button>
-            `
-            : ""
-          }
-        </div>
+            ` : ""}
+          </div>
 
-        ${isAdmin() && !isOwnAnswer
-          ? `
+          ${isAdmin() && !isOwnAnswer ? `
             <button class="admin-delete-btn admin-delete-answer-btn" onclick="adminDeleteProfileAnswer('${answer._id}', event)">
               🔨
             </button>
-          `
-          : ""
-        }
-      </div>
+          ` : ""}
+        </div>
 
-      <div id="profile-edit-answer-${answer._id}"></div>
-      <div id="profile-reply-${answer._id}"></div>
+        <div id="profile-edit-answer-${answer._id}"></div>
+        <div id="profile-reply-${answer._id}"></div>
+      </div>
     `;
 
     container.appendChild(wrapper);
@@ -642,17 +639,17 @@ async function openMyPost(postId) {
         : null;
 
     document.getElementById("profileModalAuthor").innerHTML = postAuthorId
-      ? `by <a href="#" onclick="goToUserProfile('${postAuthorId}', event)">${getAuthorName(post)}</a>`
-      : `by ${getAuthorName(post)}`;
+      ? `<a href="#" onclick="goToUserProfile('${postAuthorId}', event)">${getAuthorName(post)}</a>`
+      : `${getAuthorName(post)}`;
     document.getElementById("profileModalDesc").innerText = post.description;
 
     const commentsContainer = document.getElementById("profileModalComments");
-    commentsContainer.innerHTML = "<h4>Comments:</h4><p>Betöltés...</p>";
+    commentsContainer.innerHTML = "<h4>Kommentek:</h4><p>Betöltés...</p>";
 
     const answersRes = await apiRequest(`/posts/${postId}/answers`, "GET");
     const answers = answersRes.data.answers || [];
 
-    commentsContainer.innerHTML = "<h4>Comments:</h4>";
+    commentsContainer.innerHTML = "<h4>Kommentek:</h4>";
 
     if (answers.length === 0) {
       commentsContainer.innerHTML +=
@@ -864,3 +861,11 @@ window.addEventListener("DOMContentLoaded", () => {
   updateProfileTabs();
   loadProfile();
 });
+
+
+function toggleComment(el) {
+  const parent = el.closest(".answer-item");
+  if (parent) {
+    parent.classList.toggle("collapsed");
+  }
+}
