@@ -316,3 +316,10 @@ A backend jelenleg támogatja:
 - Ha egy felhasználó kitiltásra kerül, akkor nem érheti el az oldalt, ha pedig éppen be van jelentkezve, akkor kijelentkezteti őt az oldal és törli a localStorage tartalmát.
 - Fontos, hogy az admin, nem tud másik admin fiókot törölni.
 - Az admin képes a felhasználók között keresni is.
+
+## 2026-04-20 Felhasználó keresés
+
+- A főoldalon a kereső, mostmár hoz ki a posztokon kívül felhasználókat is.
+- A felhasználóról egy kártya jelenik meg, a nevével, profilképével, iskolájával és bemutatkozásával.
+- A kártya kattintható és átirányít a felhasználó profiljára.
+- A kártya alatt a felhasználó posztjai is megjelennek.

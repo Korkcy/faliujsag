@@ -48,6 +48,9 @@ let currentPage = 1;
 let totalPages = 1;
 let currentSearchTerm = "";
 const POSTS_PER_PAGE = 5;
+let foundUsers = [];
+let selectedUser = null;
+let isUserSearchMode = false;
 
 function formatDate(dateString) {
   if (!dateString) return "Ismeretlen dátum";
@@ -76,6 +79,26 @@ function getAuthorName(post) {
     return post.author.username || "Ismeretlen felhasználó";
   }
   return "Ismeretlen felhasználó";
+}
+
+function renderUserSearchCard(user) {
+  return `
+    <div class="search-user-card" onclick="goToUserProfile('${user._id}', event)">
+      <div class="search-user-top">
+        <img 
+          src="${user.profilePicture || 'https://i.pravatar.cc/80'}" 
+          alt="${user.username}" 
+          class="search-user-image"
+        />
+
+        <div class="search-user-info">
+          <h3>${user.username}</h3>
+          <p>${user.school || "Ismeretlen iskola"}</p>
+          ${user.bio ? `<p class="search-user-bio">${user.bio}</p>` : ""}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function getCurrentUser() {
@@ -278,11 +301,93 @@ async function loadPosts(searchTerm = currentSearchTerm, page = currentPage) {
   try {
     currentSearchTerm = searchTerm;
     currentPage = page;
+    foundUsers = [];
+    selectedUser = null;
+    isUserSearchMode = false;
+
+    container.innerHTML = "";
+
+    const trimmedSearch = currentSearchTerm.trim();
+
+    if (trimmedSearch) {
+      const userResponse = await apiRequest(`/users/search?search=${encodeURIComponent(trimmedSearch)}`, "GET");
+      foundUsers = userResponse.data.users || [];
+    }
+
+    if (foundUsers.length > 0) {
+      selectedUser = foundUsers[0];
+      isUserSearchMode = true;
+
+      container.innerHTML += renderUserSearchCard(selectedUser);
+
+      const userPostsResponse = await apiRequest(`/posts/user/${selectedUser._id}`, "GET");
+      posts = userPostsResponse.data.posts || [];
+
+      totalPages = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
+      const paginatedPosts = posts.slice(startIndex, startIndex + POSTS_PER_PAGE);
+
+      if (paginatedPosts.length === 0) {
+        container.innerHTML += "<p>Ennek a felhasználónak még nincs posztja.</p>";
+      } else {
+        paginatedPosts.forEach((post) => {
+          const div = document.createElement("div");
+          div.className = "post";
+
+          const authorId =
+            post.author && typeof post.author === "object"
+              ? post.author._id
+              : null;
+
+          div.innerHTML = `
+            <div class="post-card-top">
+              <h3>${post.title}</h3>
+              ${!isOwnPost(post) ? `
+                <button 
+                  class="save-post-btn ${isPostSaved(post._id) ? "saved" : ""}"
+                  data-post-id="${post._id}"
+                  onclick="toggleSavedPost('${post._id}', event)"
+                >
+                  ${isPostSaved(post._id) ? "🔖" : "📑"}
+                </button>
+              ` : ""}
+            </div>
+
+            <p>${post.description}</p>
+            <div class="post-meta">
+              <div class="post-meta-left">
+                <span>👤 ${authorId
+                  ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${getAuthorName(post)}</a>`
+                  : getAuthorName(post)
+                }</span>
+
+                <span>📅 ${formatDate(post.createdAt)}</span>
+                <span>💬 ${post.answersCount || 0} replies</span>
+              </div>
+
+              <div class="post-meta-right">
+                ${getRatingSummary(post)}
+              </div>
+            </div>
+          `;
+
+          div.onclick = () => openModal(post);
+          container.appendChild(div);
+        });
+      }
+
+      pageInfo.textContent = `${currentPage} / ${totalPages}`;
+      prevBtn.disabled = currentPage <= 1;
+      nextBtn.disabled = currentPage >= totalPages;
+      return;
+    }
 
     const params = new URLSearchParams();
 
-    if (currentSearchTerm.trim()) {
-      params.append("search", currentSearchTerm.trim());
+    if (trimmedSearch) {
+      params.append("search", trimmedSearch);
     }
 
     if (currentSort) {
@@ -293,15 +398,11 @@ async function loadPosts(searchTerm = currentSearchTerm, page = currentPage) {
     params.append("limit", POSTS_PER_PAGE);
 
     const endpoint = `/posts?${params.toString()}`;
-    console.log("Lekért endpoint:", endpoint);
-
     const response = await apiRequest(endpoint, "GET");
 
     posts = response.data.posts || [];
     currentPage = response.currentPage || 1;
     totalPages = response.totalPages || 1;
-
-    container.innerHTML = "";
 
     if (posts.length === 0) {
       container.innerHTML = "<p>Nincsenek még posztok.</p>";
@@ -316,36 +417,36 @@ async function loadPosts(searchTerm = currentSearchTerm, page = currentPage) {
             : null;
 
         div.innerHTML = `
-  <div class="post-card-top">
-    <h3>${post.title}</h3>
-    ${!isOwnPost(post) ? `
-    <button 
-      class="save-post-btn ${isPostSaved(post._id) ? "saved" : ""}"
-      data-post-id="${post._id}"
-      onclick="toggleSavedPost('${post._id}', event)"
-    >
-    ${isPostSaved(post._id) ? "🔖" : "📑"}
-    </button>
-` : ""}
-  </div>
+          <div class="post-card-top">
+            <h3>${post.title}</h3>
+            ${!isOwnPost(post) ? `
+              <button 
+                class="save-post-btn ${isPostSaved(post._id) ? "saved" : ""}"
+                data-post-id="${post._id}"
+                onclick="toggleSavedPost('${post._id}', event)"
+              >
+                ${isPostSaved(post._id) ? "🔖" : "📑"}
+              </button>
+            ` : ""}
+          </div>
 
-  <p>${post.description}</p>
-  <div class="post-meta">
-    <div class="post-meta-left">
-      <span>👤 ${authorId
-        ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${getAuthorName(post)}</a>`
-        : getAuthorName(post)
-      }</span>
+          <p>${post.description}</p>
+          <div class="post-meta">
+            <div class="post-meta-left">
+              <span>👤 ${authorId
+                ? `<a href="#" onclick="goToUserProfile('${authorId}', event)">${getAuthorName(post)}</a>`
+                : getAuthorName(post)
+              }</span>
 
-      <span>📅 ${formatDate(post.createdAt)}</span>
-      <span>💬 ${post.answersCount || 0} replies</span>
-    </div>
+              <span>📅 ${formatDate(post.createdAt)}</span>
+              <span>💬 ${post.answersCount || 0} replies</span>
+            </div>
 
-    <div class="post-meta-right">
-      ${getRatingSummary(post)}
-    </div>
-  </div>
-`;
+            <div class="post-meta-right">
+              ${getRatingSummary(post)}
+            </div>
+          </div>
+        `;
 
         div.onclick = () => openModal(post);
         container.appendChild(div);
