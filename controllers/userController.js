@@ -86,6 +86,39 @@ exports.unbanUser = async (req, res, next) => {
     }
 };
 
+exports.searchUsers = async (req, res, next) => {
+    try {
+        const search = req.query.search?.trim();
+
+        if (!search) {
+            return res.status(200).json({
+                status: "success",
+                results: 0,
+                data: {
+                    users: []
+                }
+            });
+        }
+
+        const users = await User.find({
+            username: { $regex: search, $options: "i" },
+            isBanned: { $ne: true }
+        })
+        .select("username school profilePicture bio role")
+        .limit(10);
+
+        res.status(200).json({
+            status: "success",
+            results: users.length,
+            data: {
+                users
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
 exports.getMe = async (req, res, next) => {
     try {
         const user = await User.findById(req.user._id).select("+password");

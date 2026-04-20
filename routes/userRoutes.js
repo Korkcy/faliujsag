@@ -5,6 +5,8 @@ const { restrictTo } = require("../middlewares/roleMiddleware");
 
 const router = express.Router();
 
+router.get("/search", userController.searchUsers);
+
 router.get("/me", protect, userController.getMe);
 router.patch("/me", protect, userController.updateMe);
 router.patch("/updateMyPassword", protect, userController.updateMyPassword);

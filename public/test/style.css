@@ -1206,3 +1206,49 @@ html.dark .profile-post-card {
   white-space: nowrap;
   margin-left: auto;
 }
+
+.search-user-card {
+  width: 600px;
+  max-width: 100%;
+  background: var(--card);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  cursor: pointer;
+  transition: 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.search-user-card:hover {
+  transform: translateY(-3px);
+}
+
+.search-user-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.search-user-image {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.search-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-user-info h3 {
+  margin: 0 0 8px 0;
+}
+
+.search-user-info p {
+  margin: 0 0 6px 0;
+}
+
+.search-user-bio {
+  opacity: 0.8;
+}
