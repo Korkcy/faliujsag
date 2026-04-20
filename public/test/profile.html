@@ -47,7 +47,7 @@
                     <img id="profileImage" src="https://i.pravatar.cc/120" alt="Profile picture">
 
                     <div class="profile-header-actions">
-                        <button type="button" id="editProfileBtn" onclick="enableEditMode()">Edit profile</button>
+                        <button type="button" id="editProfileBtn" onclick="enableEditMode()">Profil szerkesztése</button>
                         <button type="button" id="cancelEditProfileBtn" onclick="cancelEditMode()"
                             style="display:none;">Mégsem</button>
                     </div>
@@ -56,22 +56,22 @@
                 <div class="profile-info">
 
                     <div class="profile-row">
-                        <label>Profile picture URL</label>
+                        <label>Profilkép URL</label>
                         <input type="text" id="profilePicture" disabled>
                     </div>
 
                     <div class="profile-row">
-                        <label>Email</label>
+                        <label>E-mail</label>
                         <input type="email" id="email" disabled>
                     </div>
 
                     <div class="profile-row">
-                        <label>Username</label>
+                        <label>Felhasználónév</label>
                         <input type="text" id="username" disabled>
                     </div>
 
                     <div class="profile-row">
-                        <label>School</label>
+                        <label>Iskola</label>
                         <input type="text" id="school" disabled>
                     </div>
 
@@ -82,17 +82,17 @@
                     </div>
 
                     <button class="save-profile" id="saveProfileBtn" onclick="saveProfile()" style="display:none;">
-                        Save changes
+                        Változtatások mentése
                     </button>
                 </div>
 
                 <hr class="divider">
 
                 <div class="profile-info">
-                    <h3>Password change</h3>
+                    <h3>Jelszó változtatás</h3>
 
                     <div class="profile-row">
-                        <label>Current password</label>
+                        <label>Jelenlegi jelszó</label>
                         <div class="password-box">
                             <input type="password" id="currentPassword">
                             <button type="button" onclick="togglePassword('currentPassword')">👁️</button>
@@ -100,7 +100,7 @@
                     </div>
 
                     <div class="profile-row">
-                        <label>New password</label>
+                        <label>Új jelszó</label>
                         <div class="password-box">
                             <input type="password" id="newPassword">
                             <button type="button" onclick="togglePassword('newPassword')">👁️</button>
@@ -108,7 +108,7 @@
                     </div>
 
                     <div class="profile-row">
-                        <label>Confirm new password</label>
+                        <label>Új jelszó újra</label>
                         <div class="password-box">
                             <input type="password" id="newPasswordConfirm">
                             <button type="button" onclick="togglePassword('newPasswordConfirm')">👁️</button>
@@ -116,7 +116,7 @@
                     </div>
 
                     <button class="save-profile" onclick="savePassword()">
-                        Change password
+                        Jelszó megváltoztatása
                     </button>
                 </div>
 
@@ -180,7 +180,7 @@
             <p class="error" id="editPostError"></p>
         </div>
     </div>
-
+    <a href="index.html" class="back-home-btn">← Főoldal</a>
     <script src="./js/profil.js"></script>
 </body>
 

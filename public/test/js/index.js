@@ -439,7 +439,7 @@ async function loadPosts(searchTerm = currentSearchTerm, page = currentPage) {
               }</span>
 
               <span>📅 ${formatDate(post.createdAt)}</span>
-              <span>💬 ${post.answersCount || 0} replies</span>
+              <span>💬 ${post.answersCount || 0} válasz</span>
             </div>
 
             <div class="post-meta-right">
@@ -506,18 +506,18 @@ async function openModal(postOrId) {
       : null;
 
   document.getElementById("modal-author").innerHTML = postAuthorId
-    ? `by <a href="#" onclick="goToUserProfile('${postAuthorId}', event)">${getAuthorName(post)}</a>`
-    : `by ${getAuthorName(post)}`;
+    ? `<a href="#" onclick="goToUserProfile('${postAuthorId}', event)">${getAuthorName(post)}</a>`
+    : `${getAuthorName(post)}`;
   document.getElementById("modal-desc").innerText = post.description;
 
   const comments = document.getElementById("modal-comments");
-  comments.innerHTML = "<h4>Comments:</h4><p>Betöltés...</p>";
+  comments.innerHTML = "<h4>Kommentek:</h4><p>Betöltés...</p>";
 
   try {
     const response = await apiRequest(`/posts/${post._id}/answers`, "GET");
     const answers = response.data.answers || [];
 
-    comments.innerHTML = "<h4>Comments:</h4>";
+    comments.innerHTML = "<h4>Kommentek:</h4>";
 
     if (answers.length === 0) {
       comments.innerHTML += "<p>Még nincsenek válaszok ehhez a poszthoz.</p>";
